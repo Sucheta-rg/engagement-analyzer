@@ -90,12 +90,12 @@ function showSuggestionOverlay(details) {
       z-index: 2147483647;
       width: min(370px, calc(100vw - 56px));
       padding: 14px 14px 14px 18px;
-      border: 1px solid #d8d2c4;
+      border: 1px solid #e7d6c2;
       border-radius: 8px;
-      background: #fffefa;
-      box-shadow: 0 18px 50px rgba(31, 41, 51, 0.2);
-      color: #1f2933;
-      font: 13px/1.45 Arial, Helvetica, sans-serif;
+      background: #fff8ed;
+      box-shadow: 0 18px 50px rgba(63, 43, 35, 0.22);
+      color: #232126;
+      font: 13px/1.45 "Segoe UI", "Aptos", "Inter", system-ui, sans-serif;
     }
 
     #${OVERLAY_ID} .ea-note-rail {
@@ -105,7 +105,7 @@ function showSuggestionOverlay(details) {
       bottom: 10px;
       width: 4px;
       border-radius: 0 4px 4px 0;
-      background: linear-gradient(180deg, #0f766e, #b7791f);
+      background: linear-gradient(180deg, #6d3f5b, #c06f2d);
     }
 
     #${OVERLAY_ID} .ea-close {
@@ -117,8 +117,8 @@ function showSuggestionOverlay(details) {
       min-height: 0;
       border: 0;
       border-radius: 50%;
-      background: #f1eee7;
-      color: #4b5563;
+      background: #f3e8dc;
+      color: #514754;
       cursor: pointer;
       font-size: 14px;
       line-height: 20px;
@@ -137,7 +137,7 @@ function showSuggestionOverlay(details) {
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      background: #e6f4f1;
+      background: #efe4ef;
     }
 
     #${OVERLAY_ID} .ea-feather {
@@ -147,7 +147,7 @@ function showSuggestionOverlay(details) {
       width: 10px;
       height: 21px;
       border-radius: 80% 12% 80% 12%;
-      background: linear-gradient(155deg, #0f766e 0%, #2f6f68 58%, #b7791f 100%);
+      background: linear-gradient(155deg, #6d3f5b 0%, #814f67 58%, #c06f2d 100%);
       transform: rotate(-25deg);
     }
 
@@ -168,13 +168,13 @@ function showSuggestionOverlay(details) {
       width: 4px;
       height: 8px;
       border-radius: 1px 1px 5px 5px;
-      background: #1f2933;
+      background: #232126;
       transform: rotate(-25deg);
     }
 
     #${OVERLAY_ID} .ea-kicker {
       margin-bottom: 4px;
-      color: #0f766e;
+      color: #6d3f5b;
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0;
@@ -189,22 +189,22 @@ function showSuggestionOverlay(details) {
 
     #${OVERLAY_ID} p {
       margin: 0 0 10px;
-      color: #4b5563;
+      color: #514754;
     }
 
     #${OVERLAY_ID} .ea-suggestion {
       display: grid;
       gap: 4px;
       padding: 10px;
-      border: 1px solid #ead394;
+      border: 1px solid #e8bd82;
       border-radius: 8px;
-      background: #fff8df;
-      color: #3f3a2f;
+      background: #ffe6b8;
+      color: #3f2e22;
       font-weight: 700;
     }
 
     #${OVERLAY_ID} .ea-suggestion span {
-      color: #7c4a03;
+      color: #824815;
       font-size: 11px;
       text-transform: uppercase;
     }
