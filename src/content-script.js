@@ -51,8 +51,8 @@ function buildSearchCandidates(text) {
 function normalizeSearchText(text) {
   return String(text ?? "")
     .replace(/\s+/g, " ")
-    .replace(/[“”]/g, '"')
-    .replace(/[‘’]/g, "'")
+    .replace(/[\u201c\u201d]/g, '"')
+    .replace(/[\u2018\u2019]/g, "'")
     .trim();
 }
 
@@ -63,10 +63,19 @@ function showSuggestionOverlay(details) {
   overlay.id = OVERLAY_ID;
   overlay.innerHTML = `
     <button class="ea-close" type="button" aria-label="Close">x</button>
-    <div class="ea-kicker">${escapeHtml(details.found ? "Focused in document" : "Text not visible")}</div>
-    <div class="ea-title">${escapeHtml(details.label ?? "Writing signal")}</div>
+    <div class="ea-overlay-head">
+      <div class="ea-cadence" aria-hidden="true">
+        <span class="ea-feather"></span>
+        <span class="ea-nib"></span>
+      </div>
+      <div>
+        <div class="ea-kicker">${escapeHtml(details.found ? "Focused in document" : "Text not visible")}</div>
+        <div class="ea-title">${escapeHtml(details.label ?? "Writing signal")}</div>
+      </div>
+    </div>
     <p>${escapeHtml(details.message ?? "Review this part of the draft.")}</p>
     <div class="ea-suggestion">${escapeHtml(details.suggestion ?? "Add a concrete detail or rewrite for clearer rhythm.")}</div>
+    <div class="ea-line">Cadence: Add proof here: number, example, or consequence.</div>
   `;
 
   const style = document.createElement("style");
@@ -102,6 +111,54 @@ function showSuggestionOverlay(details) {
       line-height: 20px;
     }
 
+    #${OVERLAY_ID} .ea-overlay-head {
+      display: grid;
+      grid-template-columns: 38px 1fr;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    #${OVERLAY_ID} .ea-cadence {
+      position: relative;
+      width: 34px;
+      height: 34px;
+    }
+
+    #${OVERLAY_ID} .ea-feather {
+      position: absolute;
+      left: 7px;
+      top: 1px;
+      width: 18px;
+      height: 27px;
+      border-radius: 80% 10% 80% 10%;
+      background: linear-gradient(135deg, #0f766e, #164e63 58%, #f2b84b);
+      transform: rotate(-22deg);
+    }
+
+    #${OVERLAY_ID} .ea-feather::before {
+      content: "";
+      position: absolute;
+      left: 5px;
+      top: 8px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 7px 2px 0 #ffffff;
+    }
+
+    #${OVERLAY_ID} .ea-nib {
+      position: absolute;
+      left: 17px;
+      top: 22px;
+      width: 6px;
+      height: 12px;
+      border-radius: 2px 2px 7px 7px;
+      background: #172033;
+      transform: rotate(-22deg);
+    }
+
     #${OVERLAY_ID} .ea-kicker {
       margin-bottom: 5px;
       color: #0f766e;
@@ -128,6 +185,12 @@ function showSuggestionOverlay(details) {
       border-radius: 8px;
       background: #ecfdf5;
       color: #134e4a;
+      font-weight: 700;
+    }
+
+    #${OVERLAY_ID} .ea-line {
+      margin-top: 8px;
+      color: #0f766e;
       font-weight: 700;
     }
   `;
