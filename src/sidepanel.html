@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Engagement Analyzer</title>
+    <link rel="stylesheet" href="./sidepanel.css">
+  </head>
+  <body>
+    <main class="panel">
+      <header class="header">
+        <div>
+          <h1>Engagement Analyzer</h1>
+          <p id="docStatus">Open a Google Doc to begin.</p>
+        </div>
+        <button id="analyzeButton" type="button">Analyze</button>
+      </header>
+
+      <section id="summary" class="summary is-hidden" aria-live="polite"></section>
+      <section id="heatmap" class="heatmap is-hidden"></section>
+      <section id="priority" class="priority is-hidden"></section>
+      <section id="boosters" class="boosters is-hidden"></section>
+      <section id="issues" class="issues"></section>
+      <section id="emptyState" class="empty">
+        <h2>Ready when your draft is.</h2>
+        <p>Analyze the active Google Doc to find robotic rhythm, predictable phrasing, and weak specificity.</p>
+      </section>
+    </main>
+    <script type="module" src="./sidepanel.js"></script>
+  </body>
+</html>

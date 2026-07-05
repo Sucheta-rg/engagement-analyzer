@@ -1,0 +1,197 @@
+:root {
+  color-scheme: light;
+  --bg: #f8fafc;
+  --panel: #ffffff;
+  --text: #172033;
+  --muted: #64748b;
+  --border: #d9e1ec;
+  --accent: #0f766e;
+  --accent-strong: #115e59;
+  --risk: #b42318;
+  --warn: #a15c07;
+  --good: #0f7a45;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.panel {
+  padding: 14px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+h1 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+h2 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+button {
+  border: 0;
+  border-radius: 6px;
+  padding: 9px 12px;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--accent-strong);
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.summary,
+.heatmap,
+.priority,
+.boosters {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.scoreGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.score,
+.booster {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.score strong {
+  display: block;
+  font-size: 20px;
+}
+
+.score span {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.heatmapBars {
+  display: grid;
+  gap: 6px;
+}
+
+.heatmapBar {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.heatmapLevel {
+  border-radius: 999px;
+  padding: 4px 7px;
+  color: #ffffff;
+  font-size: 11px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.heatmapLevel.green {
+  background: var(--good);
+}
+
+.heatmapLevel.yellow {
+  background: var(--warn);
+}
+
+.heatmapLevel.red {
+  background: var(--risk);
+}
+
+.issues {
+  display: grid;
+  gap: 10px;
+}
+
+.issue {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--warn);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.issue.high {
+  border-left-color: var(--risk);
+}
+
+.issue.low {
+  border-left-color: var(--good);
+}
+
+.issueMeta {
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.issueMessage {
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.suggestion,
+.preview {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.empty {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.is-hidden {
+  display: none;
+}
