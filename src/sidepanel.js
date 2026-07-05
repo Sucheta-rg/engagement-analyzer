@@ -13,6 +13,7 @@ const issues = document.querySelector("#issues");
 const emptyState = document.querySelector("#emptyState");
 
 let activeTab = null;
+let focusItems = new Map();
 
 init();
 
@@ -25,8 +26,9 @@ async function init() {
   }
 
   analyzeButton.disabled = false;
-  docStatus.textContent = "Ready to analyze robotic rhythm and engagement risk.";
+  docStatus.textContent = "Ready to review robotic rhythm and engagement risk.";
   analyzeButton.addEventListener("click", analyzeActiveDocument);
+  document.addEventListener("click", handlePanelClick);
 }
 
 async function analyzeActiveDocument() {
@@ -44,8 +46,7 @@ async function analyzeActiveDocument() {
       return;
     }
 
-    const result = analyzeBlocks(blocks);
-    renderResult(result);
+    renderResult(analyzeBlocks(blocks));
   } catch (error) {
     renderMessage(error instanceof Error ? error.message : "Analysis failed.");
   } finally {
@@ -54,6 +55,7 @@ async function analyzeActiveDocument() {
 }
 
 function renderResult(result) {
+  focusItems = new Map();
   emptyState.classList.add("is-hidden");
   summary.classList.remove("is-hidden");
   heatmap.classList.remove("is-hidden");
@@ -61,9 +63,10 @@ function renderResult(result) {
   boosters.classList.toggle("is-hidden", result.specificityBoosters.length === 0);
 
   summary.innerHTML = `
-    <div class="score">
+    <div class="heroScore ${scoreTone(result.overallScore)}">
+      <span>Draft health</span>
       <strong>${result.overallScore}</strong>
-      <span>Overall engagement score</span>
+      <p>${summaryMessage(result.overallScore)}</p>
     </div>
     <div class="scoreGrid">
       ${scoreCard("Rhythm", result.rhythmScore)}
@@ -74,46 +77,74 @@ function renderResult(result) {
   `;
 
   heatmap.innerHTML = `
-    <h2>Robotic Writing Heatmap</h2>
+    <div class="sectionTitle">
+      <h2>Robotic Writing Map</h2>
+      <span>Click to locate</span>
+    </div>
     <div class="heatmapBars">
       ${result.heatmap.slice(0, 12).map(renderHeatmapEntry).join("")}
     </div>
   `;
 
   priority.innerHTML = `
-    <h2>Fix These First</h2>
+    <div class="sectionTitle">
+      <h2>Fix These First</h2>
+      <span>${result.fixPriority.length} priority signals</span>
+    </div>
     <div class="issues">
       ${result.fixPriority.length ? result.fixPriority.map(renderIssue).join("") : renderCleanIssue()}
     </div>
   `;
 
   boosters.innerHTML = `
-    <h2>Specificity Boosters</h2>
+    <div class="sectionTitle">
+      <h2>Specificity Boosters</h2>
+      <span>Make it concrete</span>
+    </div>
     ${result.specificityBoosters.map(renderBooster).join("")}
   `;
 
   issues.innerHTML = result.issues.length
-    ? `<h2>All Signals</h2>${result.issues.map(renderIssue).join("")}`
+    ? `<div class="sectionTitle"><h2>All Signals</h2><span>${result.issues.length} total</span></div>${result.issues.map(renderIssue).join("")}`
     : "";
 }
 
 function scoreCard(label, score) {
-  return `<div class="score"><strong>${score}</strong><span>${label}</span></div>`;
+  return `<div class="score ${scoreTone(score)}"><strong>${score}</strong><span>${label}</span></div>`;
 }
 
 function renderHeatmapEntry(entry) {
+  const focusId = registerFocusItem({
+    text: entry.preview,
+    label: `${entry.level.toUpperCase()} block`,
+    message: `${entry.issueCount} writing signal${entry.issueCount === 1 ? "" : "s"} found in this block.`,
+    suggestion: "Review this block for rhythm, specificity, and generic phrasing."
+  });
+
   return `
-    <article class="heatmapBar">
-      <span class="heatmapLevel ${entry.level}">${entry.level}</span>
-      <p class="preview">${escapeHtml(entry.preview)}${entry.preview.length >= 130 ? "..." : ""}</p>
+    <article class="heatmapBar ${entry.level}">
+      <button class="heatmapButton" type="button" data-focus-id="${focusId}">
+        <span class="heatmapLevel ${entry.level}">${entry.level}</span>
+        <span class="preview">${escapeHtml(entry.preview)}${entry.preview.length >= 130 ? "..." : ""}</span>
+      </button>
     </article>
   `;
 }
 
 function renderIssue(issue) {
+  const focusId = registerFocusItem({
+    text: issue.sentence ?? issue.excerpt ?? issue.message,
+    label: issue.label,
+    message: issue.message,
+    suggestion: issue.suggestion
+  });
+
   return `
     <article class="issue ${issue.severity}">
-      <div class="issueMeta">${escapeHtml(issue.label)} · ${issue.category} · ${issue.severity}</div>
+      <div class="issueTop">
+        <div class="issueMeta">${escapeHtml(issue.label)} - ${issue.category} - ${issue.severity}</div>
+        <button class="focusButton" type="button" data-focus-id="${focusId}">Focus</button>
+      </div>
       <p class="issueMessage">${escapeHtml(issue.message)}</p>
       <p class="suggestion">${escapeHtml(issue.suggestion)}</p>
     </article>
@@ -121,8 +152,16 @@ function renderIssue(issue) {
 }
 
 function renderBooster(booster) {
+  const focusId = registerFocusItem({
+    text: booster.question,
+    label: "Specificity booster",
+    message: booster.question,
+    suggestion: booster.suggestion
+  });
+
   return `
     <article class="booster">
+      <button class="focusButton" type="button" data-focus-id="${focusId}">Focus</button>
       <p class="issueMessage">${escapeHtml(booster.question)}</p>
       <p class="suggestion">${escapeHtml(booster.suggestion)}</p>
     </article>
@@ -146,6 +185,53 @@ function renderMessage(message) {
 function setBusy(isBusy) {
   analyzeButton.disabled = isBusy;
   analyzeButton.textContent = isBusy ? "Analyzing" : "Analyze";
+}
+
+async function handlePanelClick(event) {
+  const button = event.target.closest("[data-focus-id]");
+  if (!button) {
+    return;
+  }
+
+  const item = focusItems.get(button.dataset.focusId);
+  if (!item || !activeTab?.id) {
+    return;
+  }
+
+  try {
+    await chrome.tabs.sendMessage(activeTab.id, {
+      type: "EA_FOCUS_TEXT",
+      ...item
+    });
+  } catch {
+    renderMessage("Reload the Google Doc tab once, then run Analyze again so document focusing can connect.");
+  }
+}
+
+function registerFocusItem(item) {
+  const id = `focus-${focusItems.size}`;
+  focusItems.set(id, item);
+  return id;
+}
+
+function scoreTone(score) {
+  if (score < 70) {
+    return "danger";
+  }
+  if (score < 88) {
+    return "warning";
+  }
+  return "strong";
+}
+
+function summaryMessage(score) {
+  if (score < 70) {
+    return "High bounce risk. Start with the priority fixes.";
+  }
+  if (score < 88) {
+    return "Good draft, but several sections still feel generic.";
+  }
+  return "Strong base. Review the yellow/red map items first.";
 }
 
 function escapeHtml(value) {

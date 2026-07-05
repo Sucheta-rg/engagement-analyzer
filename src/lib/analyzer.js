@@ -126,6 +126,7 @@ function detectUniformRhythm(block, sentences) {
     category: "rhythm",
     label: "Repeated sentence shape",
     blockIndex: block.index,
+    excerpt: block.text,
     message: "Several nearby sentences have nearly identical length, which can make the paragraph feel mechanical.",
     suggestion: "Vary the rhythm by combining one idea, shortening another, and adding one concrete detail.",
     boosterQuestion: "Which sentence can become shorter, sharper, or more specific?"
@@ -170,6 +171,7 @@ function detectRepeatedStarts(block, sentences) {
     category: "voice",
     label: "Flat cadence",
     blockIndex: block.index,
+    excerpt: block.text,
     message: `Multiple sentences start with "${repeated[0]}", creating a repetitive cadence.`,
     suggestion: "Change the sentence openings so each idea enters from a different angle.",
     boosterQuestion: "Can one sentence start with the outcome, tension, or example instead?"
@@ -196,6 +198,7 @@ function detectLowSpecificity(block) {
     category: "specificity",
     label: "Specificity gap",
     blockIndex: block.index,
+    excerpt: block.text,
     message: "This block leans on abstract claims without concrete proof or examples.",
     suggestion: "Add a named example, number, customer detail, or observable outcome.",
     boosterQuestion: "Can you add a number, named audience, example, or consequence?"
@@ -222,6 +225,7 @@ function detectBulletSymmetry(blocks) {
     category: "structure",
     label: "Symmetrical list",
     blockIndex: bullets[0].index,
+    excerpt: bullets[0].text,
     message: "The bullet list has very similar item lengths, which can read like a generated outline.",
     suggestion: "Make one bullet more specific, merge a weak item, and vary the syntax of the list.",
     boosterQuestion: "Which bullet deserves a proof point, caveat, or concrete example?"

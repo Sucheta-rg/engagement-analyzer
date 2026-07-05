@@ -20,12 +20,12 @@ body {
   margin: 0;
   min-width: 320px;
   font-family: Arial, Helvetica, sans-serif;
-  background: var(--bg);
+  background: linear-gradient(180deg, #f8fbfc 0%, #eef5f7 100%);
   color: var(--text);
 }
 
 .panel {
-  padding: 14px;
+  padding: 16px;
 }
 
 .header {
@@ -33,8 +33,11 @@ body {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--border);
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
 }
 
 h1 {
@@ -44,7 +47,7 @@ h1 {
 }
 
 h2 {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 14px;
 }
 
@@ -78,8 +81,20 @@ button:disabled {
 .priority,
 .boosters {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   margin: 14px 0;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sectionTitle span {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .scoreGrid {
@@ -88,12 +103,45 @@ button:disabled {
   gap: 8px;
 }
 
+.heroScore,
 .score,
 .booster {
   padding: 10px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--panel);
+}
+
+.heroScore {
+  padding: 14px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+}
+
+.heroScore span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.heroScore strong {
+  display: block;
+  margin: 3px 0;
+  font-size: 34px;
+  line-height: 1;
+}
+
+.score.strong,
+.heroScore.strong {
+  border-color: #bbf7d0;
+}
+
+.score.warning,
+.heroScore.warning {
+  border-color: #fde68a;
+}
+
+.score.danger,
+.heroScore.danger {
+  border-color: #fecaca;
 }
 
 .score strong {
@@ -114,14 +162,42 @@ button:disabled {
 }
 
 .heatmapBar {
-  display: grid;
-  grid-template-columns: 48px 1fr;
-  gap: 8px;
-  align-items: center;
-  padding: 8px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--panel);
+  overflow: hidden;
+}
+
+.heatmapBar.green {
+  border-left: 5px solid var(--good);
+}
+
+.heatmapBar.yellow {
+  border-left: 5px solid var(--warn);
+}
+
+.heatmapBar.red {
+  border-left: 5px solid var(--risk);
+}
+
+.heatmapButton {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 9px;
+  align-items: center;
+  width: 100%;
+  padding: 9px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-weight: 400;
+  text-align: left;
+}
+
+.heatmapButton:hover {
+  background: #f1f7f8;
 }
 
 .heatmapLevel {
@@ -156,6 +232,7 @@ button:disabled {
   border-left: 4px solid var(--warn);
   border-radius: 8px;
   background: var(--panel);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
 }
 
 .issue.high {
@@ -167,10 +244,30 @@ button:disabled {
 }
 
 .issueMeta {
-  margin-bottom: 6px;
   color: var(--muted);
   font-size: 12px;
   text-transform: uppercase;
+}
+
+.issueTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+
+.focusButton {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border: 1px solid #99f6e4;
+  background: #ecfdf5;
+  color: #0f766e;
+  font-size: 12px;
+}
+
+.focusButton:hover {
+  background: #ccfbf1;
 }
 
 .issueMessage {
@@ -182,6 +279,23 @@ button:disabled {
 .preview {
   color: var(--muted);
   font-size: 13px;
+}
+
+.suggestion {
+  padding: 9px;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.booster {
+  position: relative;
+  padding-right: 70px;
+}
+
+.booster .focusButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
 }
 
 .empty {
