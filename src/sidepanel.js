@@ -3,6 +3,12 @@ import { getCadenceMessage, getCadenceState } from "./lib/companion.js";
 import { extractDocumentId, isGoogleDocsDocumentUrl } from "./lib/document-id.js";
 import { fetchGoogleDocument, getActiveTab, requestDocsToken } from "./lib/docs-api.js";
 import { extractTextBlocks } from "./lib/docs-text.js";
+import {
+  getMetricFocus,
+  getReviewIntro,
+  getScoreInsight,
+  getScoreTone
+} from "./lib/presentation.js";
 
 const analyzeButton = document.querySelector("#analyzeButton");
 const docStatus = document.querySelector("#docStatus");
@@ -19,6 +25,7 @@ let focusItems = new Map();
 let quietMode = false;
 let lastScore = null;
 let activeFocusId = null;
+let activeMetric = "all";
 
 init();
 
@@ -66,6 +73,7 @@ async function analyzeActiveDocument() {
 
 function renderResult(result) {
   focusItems = new Map();
+  activeMetric = "all";
   lastScore = result.overallScore;
   renderCompanion(getCadenceState({ isAnalyzing: false, score: result.overallScore }));
   emptyState.classList.add("is-hidden");
@@ -75,16 +83,22 @@ function renderResult(result) {
   boosters.classList.toggle("is-hidden", result.specificityBoosters.length === 0);
 
   summary.innerHTML = `
-    <div class="heroScore ${scoreTone(result.overallScore)}">
-      <span>Draft health</span>
-      <strong>${result.overallScore}</strong>
-      <p>${summaryMessage(result.overallScore)}</p>
+    <div class="studioPulse ${scoreTone(result.overallScore)}">
+      <div class="pulseRing" style="--score-percent: ${result.overallScore}%">
+        <strong>${result.overallScore}</strong>
+        <span>pulse</span>
+      </div>
+      <div class="pulseCopy">
+        <span class="eyebrow">Draft Pulse</span>
+        <h2>${pulseTitle(result.overallScore)}</h2>
+        <p>${summaryMessage(result.overallScore)}</p>
+      </div>
     </div>
     <div class="scoreGrid">
-      ${scoreCard("Rhythm", result.rhythmScore)}
-      ${scoreCard("Predictability", result.predictabilityScore)}
-      ${scoreCard("Structure", result.structureScore)}
-      ${scoreCard("Specificity", result.specificityScore)}
+      ${scoreCard("Rhythm", result.rhythmScore, "rhythm")}
+      ${scoreCard("Predictability", result.predictabilityScore, "predictability")}
+      ${scoreCard("Structure", result.structureScore, "structure")}
+      ${scoreCard("Specificity", result.specificityScore, "specificity")}
     </div>
   `;
 
@@ -99,12 +113,13 @@ function renderResult(result) {
   `;
 
   priority.innerHTML = `
-    <div class="sectionTitle">
-      <h2>Fix These First</h2>
-      <span>${result.fixPriority.length} priority signals</span>
+    <div class="reviewHeader">
+      <span class="eyebrow">Guided Review</span>
+      <h2>Start here</h2>
+      <p>${getReviewIntro(result.fixPriority.length)}</p>
     </div>
-    <div class="issues">
-      ${result.fixPriority.length ? result.fixPriority.map(renderIssue).join("") : renderCleanIssue()}
+    <div class="issues guidedIssues">
+      ${result.fixPriority.length ? result.fixPriority.map((issue, index) => renderIssue(issue, index)).join("") : renderCleanIssue()}
     </div>
   `;
 
@@ -117,12 +132,20 @@ function renderResult(result) {
   `;
 
   issues.innerHTML = result.issues.length
-    ? `<div class="sectionTitle"><h2>All Signals</h2><span>${result.issues.length} total</span></div>${result.issues.map(renderIssue).join("")}`
+    ? `<div class="sectionTitle"><h2>All Notes</h2><span>${result.issues.length} total</span></div>${result.issues.map((issue, index) => renderIssue(issue, index)).join("")}`
     : "";
 }
 
-function scoreCard(label, score) {
-  return `<div class="score ${scoreTone(score)}"><strong>${score}</strong><span>${label}</span></div>`;
+function scoreCard(label, score, filter) {
+  return `
+    <button class="scoreTile ${scoreTone(score)}" type="button" data-score-filter="${filter}">
+      <span class="scoreTileTop">
+        <strong>${score}</strong>
+        <span>${label}</span>
+      </span>
+      <small>${escapeHtml(getMetricFocus(label, score))}</small>
+    </button>
+  `;
 }
 
 function renderHeatmapEntry(entry) {
@@ -143,7 +166,7 @@ function renderHeatmapEntry(entry) {
   `;
 }
 
-function renderIssue(issue) {
+function renderIssue(issue, index = 0) {
   const focusId = registerFocusItem({
     text: issue.sentence ?? issue.excerpt ?? issue.message,
     label: issue.label,
@@ -152,9 +175,12 @@ function renderIssue(issue) {
   });
 
   return `
-    <article class="issue ${issue.severity}" data-focus-card="${focusId}">
+    <article class="issue ${issue.severity}" data-focus-card="${focusId}" data-category="${issue.category}">
       <div class="issueTop">
-        <div class="issueMeta">${escapeHtml(issue.label)} - ${issue.category} - ${severityLabel(issue.severity)}</div>
+        <div>
+          <div class="issueMeta">${index === 0 ? "Start here" : `Note ${index + 1}`} - ${escapeHtml(issue.label)}</div>
+          <h3>${issueTitle(issue)}</h3>
+        </div>
         <button class="focusButton" type="button" data-focus-id="${focusId}">Locate</button>
       </div>
       <p class="issueMessage">${escapeHtml(issue.message)}</p>
@@ -207,6 +233,13 @@ function setBusy(isBusy) {
 }
 
 async function handlePanelClick(event) {
+  const scoreButton = event.target.closest("[data-score-filter]");
+  if (scoreButton) {
+    activeMetric = activeMetric === scoreButton.dataset.scoreFilter ? "all" : scoreButton.dataset.scoreFilter;
+    applyMetricFilter();
+    return;
+  }
+
   const copyButton = event.target.closest("[data-copy-id]");
   if (copyButton) {
     await copySuggestion(copyButton.dataset.copyId);
@@ -258,28 +291,23 @@ async function copySuggestion(id) {
   }
 
   await navigator.clipboard.writeText(item.suggestion);
+  const button = document.querySelector(`[data-copy-id="${CSS.escape(id)}"]`);
+  if (button) {
+    button.textContent = "Copied";
+    setTimeout(() => {
+      button.textContent = "Copy direction";
+    }, 1500);
+  }
   activeFocusId = id;
   updateActiveFocusCard();
 }
 
 function scoreTone(score) {
-  if (score < 70) {
-    return "danger";
-  }
-  if (score < 88) {
-    return "warning";
-  }
-  return "strong";
+  return getScoreTone(score);
 }
 
 function summaryMessage(score) {
-  if (score < 70) {
-    return "High bounce risk. Start with the priority fixes.";
-  }
-  if (score < 88) {
-    return "Good draft, but several sections still feel generic.";
-  }
-  return "Strong base. Use the navigation map to polish the weak spots.";
+  return getScoreInsight(score);
 }
 
 async function loadQuietMode() {
@@ -334,6 +362,44 @@ function severityLabel(severity) {
     return "worth polishing";
   }
   return "light note";
+}
+
+function pulseTitle(score) {
+  if (score < 70) {
+    return "Shape the proof first";
+  }
+  if (score < 88) {
+    return "Good draft, a few rough edges";
+  }
+  return "Strong draft, ready to polish";
+}
+
+function issueTitle(issue) {
+  const titles = {
+    rhythm: "Rhythm feels too even",
+    predictability: "This phrase feels expected",
+    structure: "The structure feels too symmetrical",
+    specificity: "This needs proof",
+    voice: "The line could sound more alive"
+  };
+
+  return titles[issue.category] ?? severityLabel(issue.severity);
+}
+
+function applyMetricFilter() {
+  document.querySelectorAll("[data-score-filter]").forEach((button) => {
+    button.classList.toggle("is-selected", button.dataset.scoreFilter === activeMetric);
+  });
+
+  document.querySelectorAll("[data-category]").forEach((card) => {
+    const isVisible = activeMetric === "all" || card.dataset.category === activeMetric;
+    card.classList.toggle("is-dimmed", !isVisible);
+  });
+
+  const firstMatch = document.querySelector(`[data-category="${CSS.escape(activeMetric)}"]`);
+  if (firstMatch) {
+    firstMatch.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
 }
 
 function escapeHtml(value) {
