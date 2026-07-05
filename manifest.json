@@ -7,7 +7,7 @@
   "permissions": ["identity", "sidePanel", "tabs"],
   "host_permissions": ["https://docs.google.com/document/*", "https://docs.googleapis.com/*"],
   "oauth2": {
-    "client_id": "000000000000-dev-client-id.apps.googleusercontent.com",
+    "client_id": "176638654074-lf3smtsof04ba9sca15adf2ngl0khqu4.apps.googleusercontent.com",
     "scopes": ["https://www.googleapis.com/auth/documents.readonly"]
   },
   "background": {
