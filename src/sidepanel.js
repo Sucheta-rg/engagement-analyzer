@@ -18,6 +18,7 @@ let activeTab = null;
 let focusItems = new Map();
 let quietMode = false;
 let lastScore = null;
+let activeFocusId = null;
 
 init();
 
@@ -89,8 +90,8 @@ function renderResult(result) {
 
   heatmap.innerHTML = `
     <div class="sectionTitle">
-      <h2>Robotic Writing Map</h2>
-      <span>Click to locate</span>
+      <h2>Draft Navigation</h2>
+      <span>Click any line to jump</span>
     </div>
     <div class="heatmapBars">
       ${result.heatmap.slice(0, 12).map(renderHeatmapEntry).join("")}
@@ -127,15 +128,15 @@ function scoreCard(label, score) {
 function renderHeatmapEntry(entry) {
   const focusId = registerFocusItem({
     text: entry.preview,
-    label: `${entry.level.toUpperCase()} block`,
+    label: `${levelLabel(entry.level)} passage`,
     message: `${entry.issueCount} writing signal${entry.issueCount === 1 ? "" : "s"} found in this block.`,
     suggestion: "Review this block for rhythm, specificity, and generic phrasing."
   });
 
   return `
-    <article class="heatmapBar ${entry.level}">
+    <article class="heatmapBar ${entry.level}" data-focus-card="${focusId}">
       <button class="heatmapButton" type="button" data-focus-id="${focusId}">
-        <span class="heatmapLevel ${entry.level}">${entry.level}</span>
+        <span class="heatmapLevel ${entry.level}">${levelLabel(entry.level)}</span>
         <span class="preview">${escapeHtml(entry.preview)}${entry.preview.length >= 130 ? "..." : ""}</span>
       </button>
     </article>
@@ -151,13 +152,17 @@ function renderIssue(issue) {
   });
 
   return `
-    <article class="issue ${issue.severity}">
+    <article class="issue ${issue.severity}" data-focus-card="${focusId}">
       <div class="issueTop">
-        <div class="issueMeta">${escapeHtml(issue.label)} - ${issue.category} - ${issue.severity}</div>
-        <button class="focusButton" type="button" data-focus-id="${focusId}">Focus</button>
+        <div class="issueMeta">${escapeHtml(issue.label)} - ${issue.category} - ${severityLabel(issue.severity)}</div>
+        <button class="focusButton" type="button" data-focus-id="${focusId}">Locate</button>
       </div>
       <p class="issueMessage">${escapeHtml(issue.message)}</p>
       <p class="suggestion">${escapeHtml(issue.suggestion)}</p>
+      <div class="issueActions">
+        <button class="secondaryButton" type="button" data-focus-id="${focusId}">Locate in draft</button>
+        <button class="copyButton" type="button" data-copy-id="${focusId}">Copy direction</button>
+      </div>
     </article>
   `;
 }
@@ -171,10 +176,13 @@ function renderBooster(booster) {
   });
 
   return `
-    <article class="booster">
-      <button class="focusButton" type="button" data-focus-id="${focusId}">Focus</button>
+    <article class="booster" data-focus-card="${focusId}">
       <p class="issueMessage">${escapeHtml(booster.question)}</p>
       <p class="suggestion">${escapeHtml(booster.suggestion)}</p>
+      <div class="issueActions">
+        <button class="secondaryButton" type="button" data-focus-id="${focusId}">Locate in draft</button>
+        <button class="copyButton" type="button" data-copy-id="${focusId}">Copy direction</button>
+      </div>
     </article>
   `;
 }
@@ -199,6 +207,12 @@ function setBusy(isBusy) {
 }
 
 async function handlePanelClick(event) {
+  const copyButton = event.target.closest("[data-copy-id]");
+  if (copyButton) {
+    await copySuggestion(copyButton.dataset.copyId);
+    return;
+  }
+
   const button = event.target.closest("[data-focus-id]");
   if (!button) {
     return;
@@ -210,6 +224,8 @@ async function handlePanelClick(event) {
   }
 
   try {
+    activeFocusId = button.dataset.focusId;
+    updateActiveFocusCard();
     renderCompanion(getCadenceState({ isAnalyzing: false, score: lastScore, isPointing: true }));
     await chrome.tabs.sendMessage(activeTab.id, {
       type: "EA_FOCUS_TEXT",
@@ -229,6 +245,23 @@ function registerFocusItem(item) {
   return id;
 }
 
+function updateActiveFocusCard() {
+  document.querySelectorAll("[data-focus-card]").forEach((card) => {
+    card.classList.toggle("is-active", card.dataset.focusCard === activeFocusId);
+  });
+}
+
+async function copySuggestion(id) {
+  const item = focusItems.get(id);
+  if (!item?.suggestion) {
+    return;
+  }
+
+  await navigator.clipboard.writeText(item.suggestion);
+  activeFocusId = id;
+  updateActiveFocusCard();
+}
+
 function scoreTone(score) {
   if (score < 70) {
     return "danger";
@@ -246,7 +279,7 @@ function summaryMessage(score) {
   if (score < 88) {
     return "Good draft, but several sections still feel generic.";
   }
-  return "Strong base. Review the yellow/red map items first.";
+  return "Strong base. Use the navigation map to polish the weak spots.";
 }
 
 async function loadQuietMode() {
@@ -267,20 +300,40 @@ async function handleCompanionChange(event) {
 function renderCompanion(state) {
   companion.classList.toggle("is-quiet", quietMode);
   companion.innerHTML = `
-    <div class="cadenceMark ${state}" aria-hidden="true">
-      <span class="cadenceFeather"></span>
-      <span class="cadenceNib"></span>
-      <span class="cadencePulse"></span>
+    <div class="editorialSignal ${state}" aria-hidden="true">
+      <span class="signalFeather"></span>
+      <span class="signalNib"></span>
+      <span class="signalPulse"></span>
     </div>
     <div class="cadenceCopy">
-      <div class="cadenceKicker">Cadence</div>
+      <div class="cadenceKicker">Editorial pulse</div>
       <p>${escapeHtml(quietMode ? "Quiet mode is on. Analysis stays active." : getCadenceMessage(state))}</p>
+      <label class="quietToggle">
+        <input id="quietModeToggle" type="checkbox" ${quietMode ? "checked" : ""}>
+        <span>Quiet mode</span>
+      </label>
     </div>
-    <label class="quietToggle">
-      <input id="quietModeToggle" type="checkbox" ${quietMode ? "checked" : ""}>
-      <span>Quiet mode</span>
-    </label>
   `;
+}
+
+function levelLabel(level) {
+  if (level === "red") {
+    return "Needs proof";
+  }
+  if (level === "yellow") {
+    return "Polish";
+  }
+  return "Strong";
+}
+
+function severityLabel(severity) {
+  if (severity === "high") {
+    return "high attention";
+  }
+  if (severity === "medium") {
+    return "worth polishing";
+  }
+  return "light note";
 }
 
 function escapeHtml(value) {

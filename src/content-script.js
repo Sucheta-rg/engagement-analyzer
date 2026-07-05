@@ -63,19 +63,22 @@ function showSuggestionOverlay(details) {
   overlay.id = OVERLAY_ID;
   overlay.innerHTML = `
     <button class="ea-close" type="button" aria-label="Close">x</button>
+    <div class="ea-note-rail" aria-hidden="true"></div>
     <div class="ea-overlay-head">
-      <div class="ea-cadence" aria-hidden="true">
+      <div class="ea-editorial-mark" aria-hidden="true">
         <span class="ea-feather"></span>
         <span class="ea-nib"></span>
       </div>
       <div>
-        <div class="ea-kicker">${escapeHtml(details.found ? "Focused in document" : "Text not visible")}</div>
+        <div class="ea-kicker">${escapeHtml(details.found ? "Located in draft" : "Open this line manually")}</div>
         <div class="ea-title">${escapeHtml(details.label ?? "Writing signal")}</div>
       </div>
     </div>
     <p>${escapeHtml(details.message ?? "Review this part of the draft.")}</p>
-    <div class="ea-suggestion">${escapeHtml(details.suggestion ?? "Add a concrete detail or rewrite for clearer rhythm.")}</div>
-    <div class="ea-line">Cadence: Add proof here: number, example, or consequence.</div>
+    <div class="ea-suggestion">
+      <span>Rewrite direction</span>
+      ${escapeHtml(details.suggestion ?? "Add a concrete detail or rewrite for clearer rhythm.")}
+    </div>
   `;
 
   const style = document.createElement("style");
@@ -85,15 +88,24 @@ function showSuggestionOverlay(details) {
       right: 28px;
       top: 92px;
       z-index: 2147483647;
-      width: min(360px, calc(100vw - 56px));
-      padding: 14px;
-      border: 1px solid #bfdbfe;
-      border-left: 5px solid #0f766e;
-      border-radius: 10px;
-      background: #ffffff;
-      box-shadow: 0 18px 48px rgba(15, 23, 42, 0.22);
-      color: #172033;
+      width: min(370px, calc(100vw - 56px));
+      padding: 14px 14px 14px 18px;
+      border: 1px solid #d8d2c4;
+      border-radius: 8px;
+      background: #fffefa;
+      box-shadow: 0 18px 50px rgba(31, 41, 51, 0.2);
+      color: #1f2933;
       font: 13px/1.45 Arial, Helvetica, sans-serif;
+    }
+
+    #${OVERLAY_ID} .ea-note-rail {
+      position: absolute;
+      left: 0;
+      top: 10px;
+      bottom: 10px;
+      width: 4px;
+      border-radius: 0 4px 4px 0;
+      background: linear-gradient(180deg, #0f766e, #b7791f);
     }
 
     #${OVERLAY_ID} .ea-close {
@@ -102,10 +114,11 @@ function showSuggestionOverlay(details) {
       top: 8px;
       width: 24px;
       height: 24px;
+      min-height: 0;
       border: 0;
       border-radius: 50%;
-      background: #eef2f7;
-      color: #334155;
+      background: #f1eee7;
+      color: #4b5563;
       cursor: pointer;
       font-size: 14px;
       line-height: 20px;
@@ -113,54 +126,54 @@ function showSuggestionOverlay(details) {
 
     #${OVERLAY_ID} .ea-overlay-head {
       display: grid;
-      grid-template-columns: 38px 1fr;
+      grid-template-columns: 34px 1fr;
       gap: 10px;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 9px;
     }
 
-    #${OVERLAY_ID} .ea-cadence {
+    #${OVERLAY_ID} .ea-editorial-mark {
       position: relative;
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #e6f4f1;
     }
 
     #${OVERLAY_ID} .ea-feather {
       position: absolute;
-      left: 7px;
-      top: 1px;
-      width: 18px;
-      height: 27px;
-      border-radius: 80% 10% 80% 10%;
-      background: linear-gradient(135deg, #0f766e, #164e63 58%, #f2b84b);
-      transform: rotate(-22deg);
+      left: 11px;
+      top: 5px;
+      width: 10px;
+      height: 21px;
+      border-radius: 80% 12% 80% 12%;
+      background: linear-gradient(155deg, #0f766e 0%, #2f6f68 58%, #b7791f 100%);
+      transform: rotate(-25deg);
     }
 
-    #${OVERLAY_ID} .ea-feather::before {
+    #${OVERLAY_ID} .ea-feather::after {
       content: "";
       position: absolute;
       left: 5px;
-      top: 8px;
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: #ffffff;
-      box-shadow: 7px 2px 0 #ffffff;
+      top: 3px;
+      width: 1px;
+      height: 16px;
+      background: rgba(255, 255, 255, 0.72);
     }
 
     #${OVERLAY_ID} .ea-nib {
       position: absolute;
-      left: 17px;
-      top: 22px;
-      width: 6px;
-      height: 12px;
-      border-radius: 2px 2px 7px 7px;
-      background: #172033;
-      transform: rotate(-22deg);
+      left: 16px;
+      top: 21px;
+      width: 4px;
+      height: 8px;
+      border-radius: 1px 1px 5px 5px;
+      background: #1f2933;
+      transform: rotate(-25deg);
     }
 
     #${OVERLAY_ID} .ea-kicker {
-      margin-bottom: 5px;
+      margin-bottom: 4px;
       color: #0f766e;
       font-size: 11px;
       font-weight: 700;
@@ -169,29 +182,31 @@ function showSuggestionOverlay(details) {
     }
 
     #${OVERLAY_ID} .ea-title {
-      margin-right: 26px;
-      margin-bottom: 7px;
+      margin-right: 28px;
       font-size: 15px;
       font-weight: 700;
     }
 
     #${OVERLAY_ID} p {
       margin: 0 0 10px;
-      color: #475569;
+      color: #4b5563;
     }
 
     #${OVERLAY_ID} .ea-suggestion {
+      display: grid;
+      gap: 4px;
       padding: 10px;
+      border: 1px solid #ead394;
       border-radius: 8px;
-      background: #ecfdf5;
-      color: #134e4a;
+      background: #fff8df;
+      color: #3f3a2f;
       font-weight: 700;
     }
 
-    #${OVERLAY_ID} .ea-line {
-      margin-top: 8px;
-      color: #0f766e;
-      font-weight: 700;
+    #${OVERLAY_ID} .ea-suggestion span {
+      color: #7c4a03;
+      font-size: 11px;
+      text-transform: uppercase;
     }
   `;
 
