@@ -1,10 +1,12 @@
 import { analyzeBlocks } from "./lib/analyzer.js";
+import { getCadenceMessage, getCadenceState } from "./lib/companion.js";
 import { extractDocumentId, isGoogleDocsDocumentUrl } from "./lib/document-id.js";
 import { fetchGoogleDocument, getActiveTab, requestDocsToken } from "./lib/docs-api.js";
 import { extractTextBlocks } from "./lib/docs-text.js";
 
 const analyzeButton = document.querySelector("#analyzeButton");
 const docStatus = document.querySelector("#docStatus");
+const companion = document.querySelector("#companion");
 const summary = document.querySelector("#summary");
 const heatmap = document.querySelector("#heatmap");
 const priority = document.querySelector("#priority");
@@ -14,10 +16,15 @@ const emptyState = document.querySelector("#emptyState");
 
 let activeTab = null;
 let focusItems = new Map();
+let quietMode = false;
+let lastScore = null;
 
 init();
 
 async function init() {
+  quietMode = await loadQuietMode();
+  renderCompanion(getCadenceState({ isAnalyzing: false, score: null }));
+
   activeTab = await getActiveTab();
   if (!activeTab?.url || !isGoogleDocsDocumentUrl(activeTab.url)) {
     analyzeButton.disabled = true;
@@ -29,10 +36,12 @@ async function init() {
   docStatus.textContent = "Ready to review robotic rhythm and engagement risk.";
   analyzeButton.addEventListener("click", analyzeActiveDocument);
   document.addEventListener("click", handlePanelClick);
+  companion.addEventListener("change", handleCompanionChange);
 }
 
 async function analyzeActiveDocument() {
   setBusy(true);
+  renderCompanion(getCadenceState({ isAnalyzing: true, score: lastScore }));
   renderMessage("Requesting read-only access to this document.");
 
   try {
@@ -56,6 +65,8 @@ async function analyzeActiveDocument() {
 
 function renderResult(result) {
   focusItems = new Map();
+  lastScore = result.overallScore;
+  renderCompanion(getCadenceState({ isAnalyzing: false, score: result.overallScore }));
   emptyState.classList.add("is-hidden");
   summary.classList.remove("is-hidden");
   heatmap.classList.remove("is-hidden");
@@ -199,10 +210,14 @@ async function handlePanelClick(event) {
   }
 
   try {
+    renderCompanion(getCadenceState({ isAnalyzing: false, score: lastScore, isPointing: true }));
     await chrome.tabs.sendMessage(activeTab.id, {
       type: "EA_FOCUS_TEXT",
       ...item
     });
+    setTimeout(() => {
+      renderCompanion(getCadenceState({ isAnalyzing: false, score: lastScore }));
+    }, 1800);
   } catch {
     renderMessage("Reload the Google Doc tab once, then run Analyze again so document focusing can connect.");
   }
@@ -232,6 +247,40 @@ function summaryMessage(score) {
     return "Good draft, but several sections still feel generic.";
   }
   return "Strong base. Review the yellow/red map items first.";
+}
+
+async function loadQuietMode() {
+  const stored = await chrome.storage.local.get({ cadenceQuietMode: false });
+  return Boolean(stored.cadenceQuietMode);
+}
+
+async function handleCompanionChange(event) {
+  if (event.target?.id !== "quietModeToggle") {
+    return;
+  }
+
+  quietMode = event.target.checked;
+  await chrome.storage.local.set({ cadenceQuietMode: quietMode });
+  renderCompanion(getCadenceState({ isAnalyzing: false, score: lastScore }));
+}
+
+function renderCompanion(state) {
+  companion.classList.toggle("is-quiet", quietMode);
+  companion.innerHTML = `
+    <div class="cadenceMark ${state}" aria-hidden="true">
+      <span class="cadenceFeather"></span>
+      <span class="cadenceNib"></span>
+      <span class="cadencePulse"></span>
+    </div>
+    <div class="cadenceCopy">
+      <div class="cadenceKicker">Cadence</div>
+      <p>${escapeHtml(quietMode ? "Quiet mode is on. Analysis stays active." : getCadenceMessage(state))}</p>
+    </div>
+    <label class="quietToggle">
+      <input id="quietModeToggle" type="checkbox" ${quietMode ? "checked" : ""}>
+      <span>Quiet mode</span>
+    </label>
+  `;
 }
 
 function escapeHtml(value) {

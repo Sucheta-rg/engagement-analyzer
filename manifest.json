@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Find robotic rhythm, generic phrasing, and weak engagement patterns in Google Docs.",
   "minimum_chrome_version": "116",
-  "permissions": ["identity", "sidePanel", "tabs"],
+  "permissions": ["identity", "sidePanel", "storage", "tabs"],
   "host_permissions": ["https://docs.google.com/document/*", "https://docs.googleapis.com/*"],
   "oauth2": {
     "client_id": "176638654074-lf3smtsof04ba9sca15adf2ngl0khqu4.apps.googleusercontent.com",
