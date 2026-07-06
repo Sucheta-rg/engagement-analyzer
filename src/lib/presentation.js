@@ -18,6 +18,10 @@ export function getScoreInsight(score) {
   return "Strong draft. Clean the marked notes and ship it.";
 }
 
+export function getScoreScaleCopy() {
+  return "Below 70: add detail first. 70-87: polish. 88+: final pass.";
+}
+
 export function getMetricFocus(label, score) {
   if (score >= 88) {
     return strongMetricCopy(label);
@@ -107,6 +111,36 @@ export function getEditPrompt(issue) {
   };
 
   return prompts[issue?.category] ?? "Rewrite the line with a clearer subject and one concrete detail.";
+}
+
+export function getRewriteOptions(issue) {
+  const options = {
+    rhythm: [
+      "Split the longest sentence into two cleaner moves.",
+      "Make one sentence shorter, then add one specific detail after it."
+    ],
+    predictability: [
+      "Replace the familiar phrase with the plainest version of the point.",
+      "Name the actual action, result, or audience instead of using a broad marketing phrase."
+    ],
+    structure: [
+      "Start the list with the strongest point, then vary the next item's sentence shape.",
+      "Merge the weakest item and add one example to the strongest item."
+    ],
+    specificity: [
+      "Add one proof point: a number, named audience, example, or business consequence.",
+      "Replace the broad claim with what changed, for whom, and why it matters."
+    ],
+    voice: [
+      "Start with the actor, outcome, or tension instead of repeating the same opening.",
+      "Rewrite the sentence so the main action appears in the first five words."
+    ]
+  };
+
+  return options[issue?.category] ?? [
+    "Rewrite the line with a clearer subject and one concrete detail.",
+    "Make the sentence more direct by naming the actor and result."
+  ];
 }
 
 export function getNextQueueIndex(items, currentIndex, statuses = {}) {

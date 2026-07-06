@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Engagement Analyzer for Google Docs",
+  "name": "Content Engagement Analyzer for Google Docs",
   "version": "0.1.0",
-  "description": "Find robotic rhythm, generic phrasing, and weak engagement patterns in Google Docs.",
+  "description": "Find generic, vague, or repetitive marketing copy and turn it into a prioritized edit queue.",
   "minimum_chrome_version": "116",
   "permissions": ["identity", "sidePanel", "storage", "tabs"],
   "host_permissions": ["https://docs.google.com/document/*", "https://docs.googleapis.com/*"],

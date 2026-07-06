@@ -10,7 +10,9 @@ import {
   getIssueAction,
   getIssueReason,
   getEditPrompt,
-  getNextQueueIndex
+  getNextQueueIndex,
+  getRewriteOptions,
+  getScoreScaleCopy
 } from "../src/lib/presentation.js";
 
 test("maps score to tone for the studio UI", () => {
@@ -76,4 +78,25 @@ test("finds the next available queue item", () => {
   assert.equal(getNextQueueIndex(items, 0, statuses), 2);
   assert.equal(getNextQueueIndex(items, 2, statuses), 0);
   assert.equal(getNextQueueIndex(items, 0, { a: "done", b: "skipped", c: "done" }), -1);
+});
+
+test("builds concrete rewrite options for common issue types", () => {
+  const predictable = {
+    category: "predictability",
+    sentence: "Delve into the digital landscape to unlock the power of innovation."
+  };
+  const specificity = {
+    category: "specificity",
+    excerpt: "Our strategy improves performance, efficiency, value, growth, and success."
+  };
+
+  assert.deepEqual(getRewriteOptions(predictable).slice(0, 2), [
+    "Replace the familiar phrase with the plainest version of the point.",
+    "Name the actual action, result, or audience instead of using a broad marketing phrase."
+  ]);
+  assert.equal(getRewriteOptions(specificity)[0], "Add one proof point: a number, named audience, example, or business consequence.");
+});
+
+test("explains the score scale in writer-facing terms", () => {
+  assert.equal(getScoreScaleCopy(), "Below 70: add detail first. 70-87: polish. 88+: final pass.");
 });

@@ -11,6 +11,8 @@ import {
   getMascotState,
   getNextQueueIndex,
   getReviewIntro,
+  getRewriteOptions,
+  getScoreScaleCopy,
   getScoreInsight,
   getScoreTone,
   getStatusLabel
@@ -107,7 +109,12 @@ function renderResult(result) {
         <span class="eyebrow">Overall score</span>
         <h2>${pulseTitle(result.overallScore)}</h2>
         <p>${summaryMessage(result.overallScore)}</p>
+        <small>${getScoreScaleCopy()}</small>
       </div>
+    </div>
+    <div class="filterHeader">
+      <span>Filter notes by score area</span>
+      <button class="clearFilterButton" type="button" data-score-filter="all">Clear</button>
     </div>
     <div class="scoreGrid">
       ${scoreCard("Rhythm", result.rhythmScore, "rhythm")}
@@ -129,8 +136,8 @@ function renderResult(result) {
 
   priority.innerHTML = `
     <div class="reviewHeader">
-      <span class="eyebrow">Next edit</span>
-      <h2>Make one useful change</h2>
+      <span class="eyebrow">Priority queue</span>
+      <h2>${result.fixPriority.length ? `Step 1 of ${result.fixPriority.length}: Fix this first` : "No priority edits"}</h2>
       <p>${getReviewIntro(result.fixPriority.length)}</p>
     </div>
     <div id="queueMount" class="queueMount">${renderQueueCard()}</div>
@@ -209,14 +216,15 @@ function renderQueueCard() {
     text: issue.sentence ?? issue.excerpt ?? issue.message,
     label: getIssueAction(issue),
     message: getIssueReason(issue),
-    suggestion: getEditPrompt(issue)
+    suggestion: getClipboardText(issue)
   });
   const completedCount = Object.values(queueStatus).filter(Boolean).length;
+  const rewriteOptions = getRewriteOptions(issue);
 
   return `
     <article class="queueCard ${issue.severity}" data-focus-card="${focusId}" data-category="${issue.category}">
       <div class="queueTop">
-        <span class="queueProgress">${activeIndex + 1} of ${reviewQueue.length}</span>
+        <span class="queueProgress">Step ${activeIndex + 1} of ${reviewQueue.length}</span>
         <span class="queueCounter">${completedCount} cleared</span>
       </div>
       <h3>${escapeHtml(getIssueAction(issue))}</h3>
@@ -226,13 +234,20 @@ function renderQueueCard() {
         <span>Edit prompt</span>
         <p>${escapeHtml(getEditPrompt(issue))}</p>
       </div>
+      <div class="rewriteBox">
+        <span>Suggested rewrite</span>
+        <ul>
+          ${rewriteOptions.map((option) => `<li>${escapeHtml(option)}</li>`).join("")}
+        </ul>
+      </div>
       <div class="issueActions">
         <button class="secondaryButton" type="button" data-focus-id="${focusId}">Locate</button>
-        <button class="copyButton" type="button" data-copy-id="${focusId}">Copy edit prompt</button>
-        <button class="doneButton" type="button" data-queue-action="done">Done</button>
-        <button class="ghostButton" type="button" data-queue-action="skip">Skip</button>
-        <button class="ghostButton" type="button" data-queue-action="next">Next</button>
+        <button class="copyButton" type="button" data-copy-id="${focusId}">Copy rewrite</button>
+        <button class="doneButton" type="button" data-queue-action="done">Done with this edit</button>
+        <button class="ghostButton" type="button" data-queue-action="skip">Skip this edit</button>
+        <button class="ghostButton" type="button" data-queue-action="next">Show another edit</button>
       </div>
+      <p class="queueFeedback" id="queueFeedback" aria-live="polite"></p>
     </article>
   `;
 }
@@ -242,8 +257,9 @@ function renderIssue(issue, index = 0) {
     text: issue.sentence ?? issue.excerpt ?? issue.message,
     label: getIssueAction(issue),
     message: getIssueReason(issue),
-    suggestion: getEditPrompt(issue)
+    suggestion: getClipboardText(issue)
   });
+  const rewriteOptions = getRewriteOptions(issue);
 
   return `
     <article class="issue ${issue.severity}" data-focus-card="${focusId}" data-category="${issue.category}">
@@ -259,9 +275,15 @@ function renderIssue(issue, index = 0) {
         <span>Edit prompt</span>
         <p>${escapeHtml(getEditPrompt(issue))}</p>
       </div>
+      <div class="rewriteBox">
+        <span>Suggested rewrite</span>
+        <ul>
+          ${rewriteOptions.map((option) => `<li>${escapeHtml(option)}</li>`).join("")}
+        </ul>
+      </div>
       <div class="issueActions">
         <button class="secondaryButton" type="button" data-focus-id="${focusId}">Locate</button>
-        <button class="copyButton" type="button" data-copy-id="${focusId}">Copy edit prompt</button>
+        <button class="copyButton" type="button" data-copy-id="${focusId}">Copy rewrite</button>
       </div>
     </article>
   `;
@@ -318,7 +340,9 @@ async function handlePanelClick(event) {
 
   const scoreButton = event.target.closest("[data-score-filter]");
   if (scoreButton) {
-    activeMetric = activeMetric === scoreButton.dataset.scoreFilter ? "all" : scoreButton.dataset.scoreFilter;
+    activeMetric = scoreButton.dataset.scoreFilter === "all" || activeMetric === scoreButton.dataset.scoreFilter
+      ? "all"
+      : scoreButton.dataset.scoreFilter;
     applyMetricFilter();
     return;
   }
@@ -343,10 +367,13 @@ async function handlePanelClick(event) {
     activeFocusId = button.dataset.focusId;
     updateActiveFocusCard();
     renderCompanion(getCadenceState({ isAnalyzing: false, score: lastScore, isPointing: true }));
-    await chrome.tabs.sendMessage(activeTab.id, {
+    const response = await chrome.tabs.sendMessage(activeTab.id, {
       type: "EA_FOCUS_TEXT",
       ...item
     });
+    showLocateFeedback(response?.found === false
+      ? "Could not jump exactly. Use the overlay text to search this line manually."
+      : "Marked in the draft.");
     setTimeout(() => {
       renderCompanion(getCadenceState({ isAnalyzing: false, score: lastScore }));
     }, 1800);
@@ -373,6 +400,11 @@ function handleQueueAction(action) {
   );
   queueIndex = nextIndex === -1 ? 0 : nextIndex;
   renderQueueMount();
+  showLocateFeedback(action === "done"
+    ? "Marked done. Re-analyze after editing to verify it."
+    : action === "skip"
+      ? "Skipped. Re-analyze later to bring it back."
+      : "Showing another edit.");
 }
 
 function renderQueueMount() {
@@ -406,13 +438,31 @@ async function copySuggestion(id) {
   await navigator.clipboard.writeText(item.suggestion);
   const button = document.querySelector(`[data-copy-id="${CSS.escape(id)}"]`);
   if (button) {
+    const originalText = button.textContent;
     button.textContent = "Copied";
     setTimeout(() => {
-      button.textContent = "Copy edit prompt";
+      button.textContent = originalText;
     }, 1500);
   }
   activeFocusId = id;
   updateActiveFocusCard();
+}
+
+function getClipboardText(issue) {
+  const options = getRewriteOptions(issue);
+  return [
+    getEditPrompt(issue),
+    "",
+    "Suggested rewrite:",
+    ...options.map((option) => `- ${option}`)
+  ].join("\n");
+}
+
+function showLocateFeedback(message) {
+  const feedback = document.querySelector("#queueFeedback");
+  if (feedback) {
+    feedback.textContent = message;
+  }
 }
 
 function scoreTone(score) {
@@ -492,7 +542,7 @@ function applyMetricFilter() {
   });
 
   const firstMatch = document.querySelector(`[data-category="${CSS.escape(activeMetric)}"]`);
-  if (firstMatch) {
+  if (activeMetric !== "all" && firstMatch) {
     firstMatch.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
 }
