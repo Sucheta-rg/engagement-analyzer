@@ -92,9 +92,9 @@ function showSuggestionOverlay(details) {
       padding: 14px 14px 14px 18px;
       border: 1px solid #e7d6c2;
       border-radius: 8px;
-      background: #fff8ed;
-      box-shadow: 0 18px 50px rgba(63, 43, 35, 0.22);
-      color: #232126;
+      background: #fff9f1;
+      box-shadow: 0 18px 50px rgba(68, 49, 39, 0.22);
+      color: #242126;
       font: 13px/1.45 "Segoe UI", "Aptos", "Inter", system-ui, sans-serif;
     }
 
@@ -105,7 +105,7 @@ function showSuggestionOverlay(details) {
       bottom: 10px;
       width: 4px;
       border-radius: 0 4px 4px 0;
-      background: linear-gradient(180deg, #6d3f5b, #c06f2d);
+      background: linear-gradient(180deg, #de7b6f, #e8b65c);
     }
 
     #${OVERLAY_ID} .ea-close {
@@ -118,7 +118,7 @@ function showSuggestionOverlay(details) {
       border: 0;
       border-radius: 50%;
       background: #f3e8dc;
-      color: #514754;
+      color: #554b51;
       cursor: pointer;
       font-size: 14px;
       line-height: 20px;
@@ -137,7 +137,7 @@ function showSuggestionOverlay(details) {
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      background: #efe4ef;
+      background: #ffe7e2;
     }
 
     #${OVERLAY_ID} .ea-feather {
@@ -147,7 +147,7 @@ function showSuggestionOverlay(details) {
       width: 10px;
       height: 21px;
       border-radius: 80% 12% 80% 12%;
-      background: linear-gradient(155deg, #6d3f5b 0%, #814f67 58%, #c06f2d 100%);
+      background: linear-gradient(155deg, #de7b6f 0%, #cf8a78 58%, #e8b65c 100%);
       transform: rotate(-25deg);
     }
 
@@ -168,13 +168,13 @@ function showSuggestionOverlay(details) {
       width: 4px;
       height: 8px;
       border-radius: 1px 1px 5px 5px;
-      background: #232126;
+      background: #242126;
       transform: rotate(-25deg);
     }
 
     #${OVERLAY_ID} .ea-kicker {
       margin-bottom: 4px;
-      color: #6d3f5b;
+      color: #b85f55;
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0;
@@ -189,7 +189,7 @@ function showSuggestionOverlay(details) {
 
     #${OVERLAY_ID} p {
       margin: 0 0 10px;
-      color: #514754;
+      color: #554b51;
     }
 
     #${OVERLAY_ID} .ea-suggestion {
@@ -198,7 +198,7 @@ function showSuggestionOverlay(details) {
       padding: 10px;
       border: 1px solid #e8bd82;
       border-radius: 8px;
-      background: #ffe6b8;
+      background: #ffedc7;
       color: #3f2e22;
       font-weight: 700;
     }

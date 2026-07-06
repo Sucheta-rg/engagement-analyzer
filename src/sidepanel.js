@@ -5,9 +5,11 @@ import { fetchGoogleDocument, getActiveTab, requestDocsToken } from "./lib/docs-
 import { extractTextBlocks } from "./lib/docs-text.js";
 import {
   getMetricFocus,
+  getMascotState,
   getReviewIntro,
   getScoreInsight,
-  getScoreTone
+  getScoreTone,
+  getStatusLabel
 } from "./lib/presentation.js";
 
 const analyzeButton = document.querySelector("#analyzeButton");
@@ -36,12 +38,12 @@ async function init() {
   activeTab = await getActiveTab();
   if (!activeTab?.url || !isGoogleDocsDocumentUrl(activeTab.url)) {
     analyzeButton.disabled = true;
-    docStatus.textContent = "Open a Google Doc to analyze writing.";
+    docStatus.textContent = "Open a Google Doc to review your draft.";
     return;
   }
 
   analyzeButton.disabled = false;
-  docStatus.textContent = "Ready to review robotic rhythm and engagement risk.";
+  docStatus.textContent = "Ready to review reader friction and proof gaps.";
   analyzeButton.addEventListener("click", analyzeActiveDocument);
   document.addEventListener("click", handlePanelClick);
   companion.addEventListener("change", handleCompanionChange);
@@ -86,7 +88,7 @@ function renderResult(result) {
     <div class="studioPulse ${scoreTone(result.overallScore)}">
       <div class="pulseRing" style="--score-percent: ${result.overallScore}%">
         <strong>${result.overallScore}</strong>
-        <span>pulse</span>
+        <span>score</span>
       </div>
       <div class="pulseCopy">
         <span class="eyebrow">Draft Pulse</span>
@@ -151,7 +153,7 @@ function scoreCard(label, score, filter) {
 function renderHeatmapEntry(entry) {
   const focusId = registerFocusItem({
     text: entry.preview,
-    label: `${levelLabel(entry.level)} passage`,
+    label: `${levelLabel(entry.level, entry.issueCount)} passage`,
     message: `${entry.issueCount} writing signal${entry.issueCount === 1 ? "" : "s"} found in this block.`,
     suggestion: "Review this block for rhythm, specificity, and generic phrasing."
   });
@@ -159,7 +161,7 @@ function renderHeatmapEntry(entry) {
   return `
     <article class="heatmapBar ${entry.level}" data-focus-card="${focusId}">
       <button class="heatmapButton" type="button" data-focus-id="${focusId}">
-        <span class="heatmapLevel ${entry.level}">${levelLabel(entry.level)}</span>
+        ${renderStatusPill(entry.level, entry.issueCount)}
         <span class="preview">${escapeHtml(entry.preview)}${entry.preview.length >= 130 ? "..." : ""}</span>
       </button>
     </article>
@@ -181,7 +183,6 @@ function renderIssue(issue, index = 0) {
           <div class="issueMeta">${index === 0 ? "Start here" : `Note ${index + 1}`} - ${escapeHtml(issue.label)}</div>
           <h3>${issueTitle(issue)}</h3>
         </div>
-        <button class="focusButton" type="button" data-focus-id="${focusId}">Locate</button>
       </div>
       <p class="issueMessage">${escapeHtml(issue.message)}</p>
       <p class="suggestion">${escapeHtml(issue.suggestion)}</p>
@@ -326,15 +327,16 @@ async function handleCompanionChange(event) {
 }
 
 function renderCompanion(state) {
+  const mascotState = getMascotState({ isAnalyzing: state === "thinking", score: lastScore });
   companion.classList.toggle("is-quiet", quietMode);
   companion.innerHTML = `
-    <div class="editorialSignal ${state}" aria-hidden="true">
-      <span class="signalFeather"></span>
-      <span class="signalNib"></span>
-      <span class="signalPulse"></span>
+    <div class="inklet ${mascotState}" aria-hidden="true">
+      <span class="inkletQuill"></span>
+      <span class="inkletFace"></span>
+      <span class="inkletBlush"></span>
     </div>
     <div class="cadenceCopy">
-      <div class="cadenceKicker">Editorial pulse</div>
+      <div class="cadenceKicker">Inklet</div>
       <p>${escapeHtml(quietMode ? "Quiet mode is on. Analysis stays active." : getCadenceMessage(state))}</p>
       <label class="quietToggle">
         <input id="quietModeToggle" type="checkbox" ${quietMode ? "checked" : ""}>
@@ -344,14 +346,17 @@ function renderCompanion(state) {
   `;
 }
 
-function levelLabel(level) {
-  if (level === "red") {
-    return "Needs proof";
+function levelLabel(level, issueCount = 1) {
+  return getStatusLabel(level, issueCount) || "Clear";
+}
+
+function renderStatusPill(level, issueCount) {
+  const label = getStatusLabel(level, issueCount);
+  if (!label) {
+    return `<span class="heatmapDot ${level}" aria-hidden="true"></span>`;
   }
-  if (level === "yellow") {
-    return "Polish";
-  }
-  return "Strong";
+
+  return `<span class="heatmapLevel ${level}">${label}</span>`;
 }
 
 function severityLabel(severity) {

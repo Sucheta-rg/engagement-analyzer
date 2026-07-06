@@ -24,10 +24,10 @@ export function getMetricFocus(label, score) {
   }
 
   const copy = {
-    Rhythm: "Vary sentence length so the draft feels less mechanical.",
-    Predictability: "Expected phrasing is pulling the draft down.",
-    Structure: "Group related ideas so the reader can follow the argument.",
-    Specificity: "Add concrete examples where claims feel broad."
+    Rhythm: "Mix one short sentence with one longer proof sentence.",
+    Predictability: "Replace the most familiar phrase with plain language.",
+    Structure: "Move the strongest point before the supporting detail.",
+    Specificity: "Add one number, example, customer, or consequence."
   };
 
   return copy[label] ?? "Review the marked passages for reader friction.";
@@ -41,6 +41,32 @@ export function getReviewIntro(count) {
     return "One note is worth reviewing first.";
   }
   return `${countToWord(count)} notes are worth reviewing first.`;
+}
+
+export function getMascotState({ isAnalyzing, score }) {
+  if (isAnalyzing) {
+    return "writing";
+  }
+  if (typeof score !== "number") {
+    return "ready";
+  }
+  if (score >= 88) {
+    return "bright";
+  }
+  if (score >= 70) {
+    return "focused";
+  }
+  return "supportive";
+}
+
+export function getStatusLabel(level, issueCount) {
+  if (level === "red") {
+    return "Needs proof";
+  }
+  if (level === "yellow") {
+    return "Polish";
+  }
+  return issueCount > 0 ? "Clear" : "";
 }
 
 function strongMetricCopy(label) {

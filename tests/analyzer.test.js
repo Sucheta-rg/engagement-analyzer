@@ -25,6 +25,19 @@ test("flags generic predictable phrases", () => {
   assert.equal(result.fixPriority.length > 0, true);
 });
 
+test("deduplicates repeated issue notes in fix priority", () => {
+  const repeatedBlock = (index) => ({
+    index,
+    kind: "paragraph",
+    text: "Delve into the digital landscape with a robust solution for transformation and innovation."
+  });
+
+  const result = analyzeBlocks([repeatedBlock(0), repeatedBlock(1), repeatedBlock(2)]);
+  const uniqueMessages = new Set(result.fixPriority.map((issue) => `${issue.label}:${issue.message}`));
+
+  assert.equal(result.fixPriority.length, uniqueMessages.size);
+});
+
 test("flags uniform sentence rhythm", () => {
   const result = analyzeBlocks([
     {

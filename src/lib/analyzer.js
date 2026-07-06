@@ -139,7 +139,7 @@ function detectGenericPhrases(block) {
     id: `predictability-${block.index}-${index}`,
     severity: phrase === "leverage" ? "low" : "medium",
     category: "predictability",
-    label: "AI-slop phrase",
+    label: "Generic phrase",
     blockIndex: block.index,
     sentence: findSentenceContaining(block.text, phrase),
     message: `The phrase "${phrase}" is common in generic marketing copy.`,
@@ -248,9 +248,23 @@ function createHeatmapEntry(block, issues) {
 }
 
 function rankFixes(issues) {
-  return [...issues]
+  return dedupeIssues(issues)
     .sort((a, b) => severityPenalty(b.severity) - severityPenalty(a.severity))
     .slice(0, 5);
+}
+
+function dedupeIssues(issues) {
+  const seen = new Set();
+
+  return issues.filter((issue) => {
+    const key = `${issue.category}:${issue.label}:${issue.message}`;
+    if (seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
 }
 
 function createSpecificityBoosters(issues) {
