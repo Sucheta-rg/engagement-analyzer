@@ -6,7 +6,11 @@ import {
   getMetricFocus,
   getReviewIntro,
   getMascotState,
-  getStatusLabel
+  getStatusLabel,
+  getIssueAction,
+  getIssueReason,
+  getEditPrompt,
+  getNextQueueIndex
 } from "../src/lib/presentation.js";
 
 test("maps score to tone for the studio UI", () => {
@@ -17,8 +21,8 @@ test("maps score to tone for the studio UI", () => {
 
 test("returns warm score insight copy", () => {
   assert.equal(getScoreInsight(92), "Strong draft. Clean the marked notes and ship it.");
-  assert.equal(getScoreInsight(76), "Start with one proof gap, then re-check the draft.");
-  assert.equal(getScoreInsight(45), "Do the proof-gap edits first. Style can wait.");
+  assert.equal(getScoreInsight(76), "Start with the next edit, then re-check the draft.");
+  assert.equal(getScoreInsight(45), "Fix the concrete-detail notes first. Style can wait.");
 });
 
 test("returns metric-specific focus copy", () => {
@@ -29,8 +33,8 @@ test("returns metric-specific focus copy", () => {
 
 test("builds guided review intro from issue count", () => {
   assert.equal(getReviewIntro(0), "No major edits needed. Do a final read-through.");
-  assert.equal(getReviewIntro(1), "Make this one edit first.");
-  assert.equal(getReviewIntro(4), "Start with the first of four edits.");
+  assert.equal(getReviewIntro(1), "Make this edit first.");
+  assert.equal(getReviewIntro(4), "Work through four useful edits, one at a time.");
 });
 
 test("maps score to mascot state", () => {
@@ -44,5 +48,32 @@ test("uses restrained status labels", () => {
   assert.equal(getStatusLabel("green", 0), "");
   assert.equal(getStatusLabel("green", 2), "Clear");
   assert.equal(getStatusLabel("yellow", 1), "Polish");
-  assert.equal(getStatusLabel("red", 3), "Needs proof");
+  assert.equal(getStatusLabel("red", 3), "Needs detail");
+});
+
+test("turns issues into action-first writing guidance", () => {
+  const specificity = {
+    category: "specificity",
+    message: "This claim is broad.",
+    suggestion: "Add a customer, number, or consequence."
+  };
+  const predictability = {
+    category: "predictability",
+    label: "Generic phrase",
+    sentence: "Delve into the topic.",
+    suggestion: "Replace it with a plain phrase."
+  };
+
+  assert.equal(getIssueAction(specificity), "Add one concrete detail");
+  assert.equal(getIssueReason(predictability), "This wording is familiar, so it may feel chosen too quickly.");
+  assert.equal(getEditPrompt(specificity), "Add a customer, number, or consequence.");
+});
+
+test("finds the next available queue item", () => {
+  const items = [{ id: "a" }, { id: "b" }, { id: "c" }];
+  const statuses = { b: "done" };
+
+  assert.equal(getNextQueueIndex(items, 0, statuses), 2);
+  assert.equal(getNextQueueIndex(items, 2, statuses), 0);
+  assert.equal(getNextQueueIndex(items, 0, { a: "done", b: "skipped", c: "done" }), -1);
 });

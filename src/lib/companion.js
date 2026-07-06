@@ -1,12 +1,12 @@
 export const DEFAULT_QUIET_MODE = false;
 
 export const CADENCE_MESSAGES = {
-  ready: "Open a draft. I will mark rhythm, repetition, and proof gaps.",
-  thinking: "Reading rhythm, patterns, and proof points.",
-  strong: "This draft is moving well. Polish the marked passages.",
-  watchful: "Good base. A few lines need sharper proof.",
-  concerned: "Start with the proof gaps. They are costing clarity.",
-  pointing: "I marked the passage in your draft."
+  ready: "Open a draft. I will help pick the next useful edit.",
+  thinking: "Reading rhythm, repeated wording, and concrete detail.",
+  strong: "Clean pass. A few small edits may still help.",
+  watchful: "Good base. Start with the next edit below.",
+  concerned: "Start with the next edit. Make one clear improvement first.",
+  pointing: "Marked in the draft. Make the edit, then come back."
 };
 
 export function getCadenceState({ isAnalyzing, score, isPointing = false }) {

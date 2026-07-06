@@ -4,8 +4,12 @@ import { extractDocumentId, isGoogleDocsDocumentUrl } from "./lib/document-id.js
 import { fetchGoogleDocument, getActiveTab, requestDocsToken } from "./lib/docs-api.js";
 import { extractTextBlocks } from "./lib/docs-text.js";
 import {
+  getEditPrompt,
+  getIssueAction,
+  getIssueReason,
   getMetricFocus,
   getMascotState,
+  getNextQueueIndex,
   getReviewIntro,
   getScoreInsight,
   getScoreTone,
@@ -28,6 +32,9 @@ let quietMode = false;
 let lastScore = null;
 let activeFocusId = null;
 let activeMetric = "all";
+let reviewQueue = [];
+let queueIndex = 0;
+let queueStatus = {};
 
 init();
 
@@ -43,7 +50,7 @@ async function init() {
   }
 
   analyzeButton.disabled = false;
-  docStatus.textContent = "Ready to review reader friction and proof gaps.";
+  docStatus.textContent = "Ready to find the next useful edit.";
   analyzeButton.addEventListener("click", analyzeActiveDocument);
   document.addEventListener("click", handlePanelClick);
   companion.addEventListener("change", handleCompanionChange);
@@ -76,6 +83,12 @@ async function analyzeActiveDocument() {
 function renderResult(result) {
   focusItems = new Map();
   activeMetric = "all";
+  queueIndex = 0;
+  queueStatus = {};
+  reviewQueue = result.fixPriority.map((issue, index) => ({
+    ...issue,
+    queueId: `queue-${index}`
+  }));
   lastScore = result.overallScore;
   renderCompanion(getCadenceState({ isAnalyzing: false, score: result.overallScore }));
   emptyState.classList.add("is-hidden");
@@ -91,7 +104,7 @@ function renderResult(result) {
         <span>score</span>
       </div>
       <div class="pulseCopy">
-        <span class="eyebrow">Draft Pulse</span>
+        <span class="eyebrow">Overall score</span>
         <h2>${pulseTitle(result.overallScore)}</h2>
         <p>${summaryMessage(result.overallScore)}</p>
       </div>
@@ -116,25 +129,23 @@ function renderResult(result) {
 
   priority.innerHTML = `
     <div class="reviewHeader">
-      <span class="eyebrow">Guided Review</span>
-      <h2>Do this first</h2>
+      <span class="eyebrow">Next edit</span>
+      <h2>Make one useful change</h2>
       <p>${getReviewIntro(result.fixPriority.length)}</p>
     </div>
-    <div class="issues guidedIssues">
-      ${result.fixPriority.length ? result.fixPriority.map((issue, index) => renderIssue(issue, index)).join("") : renderCleanIssue()}
-    </div>
+    <div id="queueMount" class="queueMount">${renderQueueCard()}</div>
   `;
 
   boosters.innerHTML = `
     <div class="sectionTitle">
-      <h2>Specificity Boosters</h2>
+      <h2>Detail Options</h2>
       <span>Make it concrete</span>
     </div>
     ${result.specificityBoosters.map(renderBooster).join("")}
   `;
 
   issues.innerHTML = result.issues.length
-    ? `<div class="sectionTitle"><h2>All Notes</h2><span>${result.issues.length} total</span></div>${result.issues.map((issue, index) => renderIssue(issue, index)).join("")}`
+    ? `<div class="sectionTitle"><h2>Other useful edits</h2><span>${result.issues.length} total</span></div>${result.issues.map((issue, index) => renderIssue(issue, index)).join("")}`
     : "";
 }
 
@@ -154,7 +165,7 @@ function renderHeatmapEntry(entry) {
   const focusId = registerFocusItem({
     text: entry.preview,
     label: `${levelLabel(entry.level, entry.issueCount)} passage`,
-    message: `${entry.issueCount} writing signal${entry.issueCount === 1 ? "" : "s"} found in this block.`,
+    message: `${entry.issueCount} note${entry.issueCount === 1 ? "" : "s"} found in this block.`,
     suggestion: "Review this block for rhythm, specificity, and generic phrasing."
   });
 
@@ -168,30 +179,89 @@ function renderHeatmapEntry(entry) {
   `;
 }
 
+function renderQueueCard() {
+  if (!reviewQueue.length) {
+    return renderCleanIssue();
+  }
+
+  const availableIndex = reviewQueue.findIndex((issue) => {
+    const status = queueStatus[issue.queueId];
+    return status !== "done" && status !== "skipped";
+  });
+
+  if (availableIndex === -1) {
+    return `
+      <article class="queueCard queueDone">
+        <div class="queueMark">Done</div>
+        <h3>Priority edits are complete</h3>
+        <p>Re-analyze after editing to check the draft again.</p>
+      </article>
+    `;
+  }
+
+  if (queueStatus[reviewQueue[queueIndex]?.queueId]) {
+    queueIndex = availableIndex;
+  }
+
+  const issue = reviewQueue[queueIndex] ?? reviewQueue[availableIndex];
+  const activeIndex = reviewQueue.indexOf(issue);
+  const focusId = registerFocusItem({
+    text: issue.sentence ?? issue.excerpt ?? issue.message,
+    label: getIssueAction(issue),
+    message: getIssueReason(issue),
+    suggestion: getEditPrompt(issue)
+  });
+  const completedCount = Object.values(queueStatus).filter(Boolean).length;
+
+  return `
+    <article class="queueCard ${issue.severity}" data-focus-card="${focusId}" data-category="${issue.category}">
+      <div class="queueTop">
+        <span class="queueProgress">${activeIndex + 1} of ${reviewQueue.length}</span>
+        <span class="queueCounter">${completedCount} cleared</span>
+      </div>
+      <h3>${escapeHtml(getIssueAction(issue))}</h3>
+      <blockquote>${escapeHtml(issue.sentence ?? issue.excerpt ?? issue.message)}</blockquote>
+      <p class="issueReason">${escapeHtml(getIssueReason(issue))}</p>
+      <div class="nextMove">
+        <span>Edit prompt</span>
+        <p>${escapeHtml(getEditPrompt(issue))}</p>
+      </div>
+      <div class="issueActions">
+        <button class="secondaryButton" type="button" data-focus-id="${focusId}">Locate</button>
+        <button class="copyButton" type="button" data-copy-id="${focusId}">Copy edit prompt</button>
+        <button class="doneButton" type="button" data-queue-action="done">Done</button>
+        <button class="ghostButton" type="button" data-queue-action="skip">Skip</button>
+        <button class="ghostButton" type="button" data-queue-action="next">Next</button>
+      </div>
+    </article>
+  `;
+}
+
 function renderIssue(issue, index = 0) {
   const focusId = registerFocusItem({
     text: issue.sentence ?? issue.excerpt ?? issue.message,
-    label: issue.label,
-    message: issue.message,
-    suggestion: issue.suggestion
+    label: getIssueAction(issue),
+    message: getIssueReason(issue),
+    suggestion: getEditPrompt(issue)
   });
 
   return `
     <article class="issue ${issue.severity}" data-focus-card="${focusId}" data-category="${issue.category}">
       <div class="issueTop">
         <div>
-          <div class="issueMeta">${index === 0 ? "First edit" : `Note ${index + 1}`} - ${escapeHtml(issue.label)}</div>
-          <h3>${issueTitle(issue)}</h3>
+          <div class="issueMeta">Note ${index + 1} - ${escapeHtml(issue.label)}</div>
+          <h3>${escapeHtml(getIssueAction(issue))}</h3>
         </div>
       </div>
-      <p class="issueMessage">${escapeHtml(issue.message)}</p>
+      <blockquote>${escapeHtml(issue.sentence ?? issue.excerpt ?? issue.message)}</blockquote>
+      <p class="issueMessage">${escapeHtml(getIssueReason(issue))}</p>
       <div class="nextMove">
-        <span>Next move</span>
-        <p>${escapeHtml(issue.suggestion)}</p>
+        <span>Edit prompt</span>
+        <p>${escapeHtml(getEditPrompt(issue))}</p>
       </div>
       <div class="issueActions">
-        <button class="secondaryButton" type="button" data-focus-id="${focusId}">Locate in draft</button>
-        <button class="copyButton" type="button" data-copy-id="${focusId}">Copy next move</button>
+        <button class="secondaryButton" type="button" data-focus-id="${focusId}">Locate</button>
+        <button class="copyButton" type="button" data-copy-id="${focusId}">Copy edit prompt</button>
       </div>
     </article>
   `;
@@ -209,19 +279,19 @@ function renderBooster(booster) {
     <article class="booster" data-focus-card="${focusId}">
       <p class="issueMessage">${escapeHtml(booster.question)}</p>
       <div class="nextMove">
-        <span>Try this</span>
+        <span>Detail prompt</span>
         <p>${escapeHtml(booster.suggestion)}</p>
       </div>
       <div class="issueActions">
-        <button class="secondaryButton" type="button" data-focus-id="${focusId}">Locate in draft</button>
-        <button class="copyButton" type="button" data-copy-id="${focusId}">Copy next move</button>
+        <button class="secondaryButton" type="button" data-focus-id="${focusId}">Locate</button>
+        <button class="copyButton" type="button" data-copy-id="${focusId}">Copy edit prompt</button>
       </div>
     </article>
   `;
 }
 
 function renderCleanIssue() {
-  return `<article class="issue low"><p class="issueMessage">No major robotic writing patterns found.</p></article>`;
+  return `<article class="issue low"><p class="issueMessage">No major notes found. Do a final read-through.</p></article>`;
 }
 
 function renderMessage(message) {
@@ -240,6 +310,12 @@ function setBusy(isBusy) {
 }
 
 async function handlePanelClick(event) {
+  const queueButton = event.target.closest("[data-queue-action]");
+  if (queueButton) {
+    handleQueueAction(queueButton.dataset.queueAction);
+    return;
+  }
+
   const scoreButton = event.target.closest("[data-score-filter]");
   if (scoreButton) {
     activeMetric = activeMetric === scoreButton.dataset.scoreFilter ? "all" : scoreButton.dataset.scoreFilter;
@@ -279,6 +355,36 @@ async function handlePanelClick(event) {
   }
 }
 
+function handleQueueAction(action) {
+  const currentIssue = reviewQueue[queueIndex];
+  if (!currentIssue) {
+    return;
+  }
+
+  if (action === "done" || action === "skip") {
+    queueStatus[currentIssue.queueId] = action === "done" ? "done" : "skipped";
+  }
+
+  const statusesById = Object.fromEntries(reviewQueue.map((issue) => [issue.queueId, queueStatus[issue.queueId]]));
+  const nextIndex = getNextQueueIndex(
+    reviewQueue.map((issue) => ({ ...issue, id: issue.queueId })),
+    queueIndex,
+    statusesById
+  );
+  queueIndex = nextIndex === -1 ? 0 : nextIndex;
+  renderQueueMount();
+}
+
+function renderQueueMount() {
+  const queueMount = document.querySelector("#queueMount");
+  if (!queueMount) {
+    return;
+  }
+
+  queueMount.innerHTML = renderQueueCard();
+  applyMetricFilter();
+}
+
 function registerFocusItem(item) {
   const id = `focus-${focusItems.size}`;
   focusItems.set(id, item);
@@ -302,7 +408,7 @@ async function copySuggestion(id) {
   if (button) {
     button.textContent = "Copied";
     setTimeout(() => {
-      button.textContent = "Copy next move";
+      button.textContent = "Copy edit prompt";
     }, 1500);
   }
   activeFocusId = id;
@@ -365,36 +471,14 @@ function renderStatusPill(level, issueCount) {
   return `<span class="heatmapLevel ${level}">${label}</span>`;
 }
 
-function severityLabel(severity) {
-  if (severity === "high") {
-    return "high attention";
-  }
-  if (severity === "medium") {
-    return "worth polishing";
-  }
-  return "light note";
-}
-
 function pulseTitle(score) {
   if (score < 70) {
-    return "Shape the proof first";
+    return "Add concrete detail first";
   }
   if (score < 88) {
     return "Good draft, a few rough edges";
   }
   return "Strong draft, ready to polish";
-}
-
-function issueTitle(issue) {
-  const titles = {
-    rhythm: "Rhythm feels too even",
-    predictability: "This phrase feels expected",
-    structure: "The structure feels too symmetrical",
-    specificity: "This needs proof",
-    voice: "The line could sound more alive"
-  };
-
-  return titles[issue.category] ?? severityLabel(issue.severity);
 }
 
 function applyMetricFilter() {

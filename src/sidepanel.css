@@ -1,26 +1,30 @@
 :root {
   color-scheme: light;
-  --paper: #fff9f1;
-  --paper-deep: #f4e7d6;
-  --panel: #fffefd;
-  --ink: #232126;
-  --soft-ink: #514754;
-  --muted: #806f63;
-  --line: #ead9c8;
-  --coral: #de7b6f;
-  --coral-dark: #b85f55;
-  --coral-soft: #ffe7e2;
-  --amber: #e8b65c;
-  --amber-soft: #ffedc7;
-  --mint: #bfe7d3;
-  --mint-dark: #537c68;
-  --mint-soft: #effaf3;
-  --sky: #b9ddf2;
-  --sky-dark: #4c7892;
+  --paper: #fff8ef;
+  --paper-deep: #f4e4d1;
+  --panel: #fffdfb;
+  --ink: #27222a;
+  --soft-ink: #514852;
+  --muted: #75666d;
+  --line: #ebdccd;
+  --coral: #e1796f;
+  --coral-dark: #b85d55;
+  --coral-soft: #ffe8e3;
+  --parrot: #9dde5a;
+  --parrot-dark: #4e7d22;
+  --parrot-soft: #f1fadb;
+  --sky: #b9dff7;
+  --sky-dark: #3f7896;
   --sky-soft: #eef8ff;
-  --baby-pink: #ffddeb;
+  --baby-pink: #ffd8e8;
+  --baby-pink-dark: #a95a78;
+  --baby-pink-soft: #fff0f6;
+  --amber: #e9b85e;
+  --amber-soft: #fff1c9;
   --clay: #c95c4a;
   --clay-soft: #fff0ed;
+  --lavender: #8a6bbe;
+  --lavender-soft: #f3eeff;
   --shadow: 0 16px 36px rgba(68, 49, 39, 0.12);
   --shadow-soft: 0 8px 24px rgba(68, 49, 39, 0.08);
 }
@@ -35,7 +39,8 @@ body {
   font-family: "Segoe UI", "Aptos", "Inter", system-ui, sans-serif;
   background:
     radial-gradient(circle at top left, rgba(255, 221, 235, 0.72), transparent 34%),
-    linear-gradient(180deg, var(--paper) 0%, #f8f2e9 100%);
+    radial-gradient(circle at 95% 12%, rgba(185, 223, 247, 0.52), transparent 28%),
+    linear-gradient(180deg, var(--paper) 0%, var(--paper-deep) 100%);
   color: var(--ink);
 }
 
@@ -376,7 +381,7 @@ button:disabled {
 }
 
 .pulseRing {
-  --tone: var(--mint-dark);
+  --tone: var(--parrot-dark);
   display: grid;
   place-items: center;
   align-content: center;
@@ -442,7 +447,7 @@ button:disabled {
 }
 
 .scoreTile.strong {
-  border-color: #c9e7d6;
+  border-color: #d5edba;
 }
 
 .scoreTile.warning {
@@ -514,7 +519,7 @@ button:disabled {
 }
 
 .heatmapBar.green {
-  border-left: 4px solid var(--mint-dark);
+  border-left: 4px solid var(--parrot-dark);
 }
 
 .heatmapBar.yellow {
@@ -527,9 +532,10 @@ button:disabled {
 
 .heatmapBar.is-active,
 .issue.is-active,
-.booster.is-active {
-  outline: 2px solid rgba(222, 123, 111, 0.34);
-  box-shadow: 0 14px 28px rgba(222, 123, 111, 0.14);
+.booster.is-active,
+.queueCard.is-active {
+  outline: 2px solid rgba(138, 107, 190, 0.32);
+  box-shadow: 0 14px 28px rgba(138, 107, 190, 0.14);
 }
 
 .heatmapButton {
@@ -563,8 +569,8 @@ button:disabled {
 }
 
 .heatmapLevel.green {
-  background: var(--mint-soft);
-  color: var(--mint-dark);
+  background: var(--parrot-soft);
+  color: var(--parrot-dark);
 }
 
 .heatmapLevel.yellow {
@@ -577,6 +583,7 @@ button:disabled {
   color: var(--clay);
 }
 
+.queueCard,
 .issue,
 .booster {
   display: grid;
@@ -589,12 +596,50 @@ button:disabled {
   transition: opacity 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
 
-.guidedIssues .issue:first-child {
+.queueMount {
+  display: grid;
+  gap: 8px;
+}
+
+.queueCard {
   background:
-    linear-gradient(135deg, rgba(255, 254, 253, 0.98), rgba(255, 221, 235, 0.42)),
+    linear-gradient(135deg, rgba(255, 253, 251, 0.98), rgba(255, 216, 232, 0.36), rgba(185, 223, 247, 0.38)),
     var(--panel);
   border-color: #f0c8c0;
   border-left-color: var(--coral);
+}
+
+.queueDone {
+  border-left-color: var(--parrot-dark);
+  background:
+    linear-gradient(135deg, rgba(255, 253, 251, 0.98), rgba(241, 250, 219, 0.7)),
+    var(--panel);
+}
+
+.queueTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.queueProgress,
+.queueCounter,
+.queueMark {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: var(--sky-soft);
+  color: var(--sky-dark);
+  font-size: 11px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.queueCounter,
+.queueMark {
+  background: var(--parrot-soft);
+  color: var(--parrot-dark);
 }
 
 .issue.high {
@@ -602,7 +647,7 @@ button:disabled {
 }
 
 .issue.low {
-  border-left-color: var(--mint-dark);
+  border-left-color: var(--parrot-dark);
 }
 
 .issue.is-dimmed {
@@ -655,9 +700,52 @@ button:disabled {
   background: var(--amber-soft);
 }
 
+.doneButton,
+.ghostButton {
+  min-height: 30px;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  font-size: 12px;
+}
+
+.doneButton {
+  border-color: #d5edba;
+  background: var(--parrot-soft);
+  color: var(--parrot-dark);
+}
+
+.doneButton:hover {
+  background: #e3f6bc;
+}
+
+.ghostButton {
+  background: var(--panel);
+  color: var(--muted);
+}
+
+.ghostButton:hover {
+  background: var(--baby-pink-soft);
+}
+
 .issueMessage {
   color: var(--soft-ink);
   font-size: 13px;
+}
+
+.issueReason {
+  color: var(--soft-ink);
+  font-size: 13px;
+}
+
+blockquote {
+  margin: 0;
+  padding: 9px 10px;
+  border-left: 3px solid var(--sky);
+  border-radius: 7px;
+  background: rgba(238, 248, 255, 0.72);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.38;
 }
 
 .suggestion,
@@ -685,6 +773,25 @@ button:disabled {
 .nextMove p {
   color: var(--ink);
   font-weight: 700;
+}
+
+.heatmapDot {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background: var(--parrot);
+  box-shadow: 0 0 0 3px var(--parrot-soft);
+}
+
+.heatmapDot.yellow {
+  background: var(--amber);
+  box-shadow: 0 0 0 3px var(--amber-soft);
+}
+
+.heatmapDot.red {
+  background: var(--clay);
+  box-shadow: 0 0 0 3px var(--clay-soft);
 }
 
 .suggestion {
