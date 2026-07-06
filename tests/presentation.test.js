@@ -16,9 +16,9 @@ test("maps score to tone for the studio UI", () => {
 });
 
 test("returns warm score insight copy", () => {
-  assert.equal(getScoreInsight(92), "Strong draft. Use the marked notes for final polish.");
-  assert.equal(getScoreInsight(76), "Good base. A few passages need sharper proof.");
-  assert.equal(getScoreInsight(45), "Start with the proof gaps before polishing style.");
+  assert.equal(getScoreInsight(92), "Strong draft. Clean the marked notes and ship it.");
+  assert.equal(getScoreInsight(76), "Start with one proof gap, then re-check the draft.");
+  assert.equal(getScoreInsight(45), "Do the proof-gap edits first. Style can wait.");
 });
 
 test("returns metric-specific focus copy", () => {
@@ -28,9 +28,9 @@ test("returns metric-specific focus copy", () => {
 });
 
 test("builds guided review intro from issue count", () => {
-  assert.equal(getReviewIntro(0), "No major writing signals found.");
-  assert.equal(getReviewIntro(1), "One note is worth reviewing first.");
-  assert.equal(getReviewIntro(4), "Four notes are worth reviewing first.");
+  assert.equal(getReviewIntro(0), "No major edits needed. Do a final read-through.");
+  assert.equal(getReviewIntro(1), "Make this one edit first.");
+  assert.equal(getReviewIntro(4), "Start with the first of four edits.");
 });
 
 test("maps score to mascot state", () => {

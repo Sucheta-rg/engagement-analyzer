@@ -76,7 +76,7 @@ function showSuggestionOverlay(details) {
     </div>
     <p>${escapeHtml(details.message ?? "Review this part of the draft.")}</p>
     <div class="ea-suggestion">
-      <span>Rewrite direction</span>
+      <span>Next move</span>
       ${escapeHtml(details.suggestion ?? "Add a concrete detail or rewrite for clearer rhythm.")}
     </div>
   `;
@@ -196,15 +196,15 @@ function showSuggestionOverlay(details) {
       display: grid;
       gap: 4px;
       padding: 10px;
-      border: 1px solid #e8bd82;
+      border: 1px solid #b9d7e8;
       border-radius: 8px;
-      background: #ffedc7;
-      color: #3f2e22;
+      background: #eef8ff;
+      color: #242126;
       font-weight: 700;
     }
 
     #${OVERLAY_ID} .ea-suggestion span {
-      color: #824815;
+      color: #4c7892;
       font-size: 11px;
       text-transform: uppercase;
     }

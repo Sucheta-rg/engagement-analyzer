@@ -10,12 +10,12 @@ export function getScoreTone(score) {
 
 export function getScoreInsight(score) {
   if (score < 70) {
-    return "Start with the proof gaps before polishing style.";
+    return "Do the proof-gap edits first. Style can wait.";
   }
   if (score < 88) {
-    return "Good base. A few passages need sharper proof.";
+    return "Start with one proof gap, then re-check the draft.";
   }
-  return "Strong draft. Use the marked notes for final polish.";
+  return "Strong draft. Clean the marked notes and ship it.";
 }
 
 export function getMetricFocus(label, score) {
@@ -35,12 +35,12 @@ export function getMetricFocus(label, score) {
 
 export function getReviewIntro(count) {
   if (count === 0) {
-    return "No major writing signals found.";
+    return "No major edits needed. Do a final read-through.";
   }
   if (count === 1) {
-    return "One note is worth reviewing first.";
+    return "Make this one edit first.";
   }
-  return `${countToWord(count)} notes are worth reviewing first.`;
+  return `Start with the first of ${countToWord(count).toLowerCase()} edits.`;
 }
 
 export function getMascotState({ isAnalyzing, score }) {

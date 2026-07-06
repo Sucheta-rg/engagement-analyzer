@@ -117,7 +117,7 @@ function renderResult(result) {
   priority.innerHTML = `
     <div class="reviewHeader">
       <span class="eyebrow">Guided Review</span>
-      <h2>Start here</h2>
+      <h2>Do this first</h2>
       <p>${getReviewIntro(result.fixPriority.length)}</p>
     </div>
     <div class="issues guidedIssues">
@@ -180,15 +180,18 @@ function renderIssue(issue, index = 0) {
     <article class="issue ${issue.severity}" data-focus-card="${focusId}" data-category="${issue.category}">
       <div class="issueTop">
         <div>
-          <div class="issueMeta">${index === 0 ? "Start here" : `Note ${index + 1}`} - ${escapeHtml(issue.label)}</div>
+          <div class="issueMeta">${index === 0 ? "First edit" : `Note ${index + 1}`} - ${escapeHtml(issue.label)}</div>
           <h3>${issueTitle(issue)}</h3>
         </div>
       </div>
       <p class="issueMessage">${escapeHtml(issue.message)}</p>
-      <p class="suggestion">${escapeHtml(issue.suggestion)}</p>
+      <div class="nextMove">
+        <span>Next move</span>
+        <p>${escapeHtml(issue.suggestion)}</p>
+      </div>
       <div class="issueActions">
         <button class="secondaryButton" type="button" data-focus-id="${focusId}">Locate in draft</button>
-        <button class="copyButton" type="button" data-copy-id="${focusId}">Copy direction</button>
+        <button class="copyButton" type="button" data-copy-id="${focusId}">Copy next move</button>
       </div>
     </article>
   `;
@@ -205,10 +208,13 @@ function renderBooster(booster) {
   return `
     <article class="booster" data-focus-card="${focusId}">
       <p class="issueMessage">${escapeHtml(booster.question)}</p>
-      <p class="suggestion">${escapeHtml(booster.suggestion)}</p>
+      <div class="nextMove">
+        <span>Try this</span>
+        <p>${escapeHtml(booster.suggestion)}</p>
+      </div>
       <div class="issueActions">
         <button class="secondaryButton" type="button" data-focus-id="${focusId}">Locate in draft</button>
-        <button class="copyButton" type="button" data-copy-id="${focusId}">Copy direction</button>
+        <button class="copyButton" type="button" data-copy-id="${focusId}">Copy next move</button>
       </div>
     </article>
   `;
@@ -296,7 +302,7 @@ async function copySuggestion(id) {
   if (button) {
     button.textContent = "Copied";
     setTimeout(() => {
-      button.textContent = "Copy direction";
+      button.textContent = "Copy next move";
     }, 1500);
   }
   activeFocusId = id;

@@ -15,6 +15,9 @@
   --mint: #bfe7d3;
   --mint-dark: #537c68;
   --mint-soft: #effaf3;
+  --sky: #b9ddf2;
+  --sky-dark: #4c7892;
+  --sky-soft: #eef8ff;
   --baby-pink: #ffddeb;
   --clay: #c95c4a;
   --clay-soft: #fff0ed;
@@ -368,7 +371,7 @@ button:disabled {
   align-items: center;
   padding: 14px;
   border: 1px solid var(--line);
-  background: linear-gradient(135deg, #fffefd 0%, #fff6dd 100%);
+  background: linear-gradient(135deg, #fffefd 0%, var(--sky-soft) 48%, #fff6dd 100%);
   box-shadow: var(--shadow);
 }
 
@@ -481,7 +484,7 @@ button:disabled {
   padding: 13px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: linear-gradient(135deg, rgba(255, 254, 253, 0.95), rgba(255, 242, 207, 0.65));
+  background: linear-gradient(135deg, rgba(255, 254, 253, 0.95), rgba(255, 221, 235, 0.38), rgba(185, 221, 242, 0.38));
 }
 
 .sectionTitle {
@@ -661,6 +664,27 @@ button:disabled {
 .preview {
   color: var(--muted);
   font-size: 13px;
+}
+
+.nextMove {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid #b9d7e8;
+  border-radius: 8px;
+  background: var(--sky-soft);
+}
+
+.nextMove span {
+  color: var(--sky-dark);
+  font-size: 11px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.nextMove p {
+  color: var(--ink);
+  font-weight: 700;
 }
 
 .suggestion {
