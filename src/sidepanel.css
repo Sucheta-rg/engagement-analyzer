@@ -128,7 +128,7 @@ button:disabled {
 
 .companion {
   display: grid;
-  grid-template-columns: 42px 1fr;
+  grid-template-columns: 46px 1fr;
   gap: 12px;
   align-items: center;
   padding: 12px;
@@ -141,6 +141,21 @@ button:disabled {
 
 .companion.is-quiet .inkletBlush {
   display: none;
+}
+
+.penwick {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 72px;
+  overflow: visible;
+}
+
+.penwick svg {
+  width: 42px;
+  height: 88px;
+  max-width: none;
+  transform-origin: 50% 80%;
 }
 
 .inklet {
@@ -310,6 +325,12 @@ button:disabled {
   font-size: 13px;
 }
 
+.cadenceMessage {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.42;
+}
+
 .quietToggle {
   display: flex;
   align-items: center;
@@ -351,6 +372,15 @@ button:disabled {
   }
   45% {
     transform: rotate(-3deg) translateY(1px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .penwick svg *,
+  .inklet,
+  .editorialSignal *,
+  .signalPulse {
+    animation: none !important;
   }
 }
 

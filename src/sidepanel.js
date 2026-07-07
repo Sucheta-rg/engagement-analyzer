@@ -1,5 +1,5 @@
 import { analyzeBlocks } from "./lib/analyzer.js";
-import { getCadenceMessage, getCadenceState } from "./lib/companion.js";
+import { getCadenceMessage, getCadenceState, renderPenwick } from "./lib/companion.js";
 import { extractDocumentId, isGoogleDocsDocumentUrl } from "./lib/document-id.js";
 import { fetchGoogleDocument, getActiveTab, requestDocsToken } from "./lib/docs-api.js";
 import { extractTextBlocks } from "./lib/docs-text.js";
@@ -8,7 +8,6 @@ import {
   getIssueAction,
   getIssueReason,
   getMetricFocus,
-  getMascotState,
   getNextQueueIndex,
   getReviewIntro,
   getRewriteOptions,
@@ -495,23 +494,12 @@ async function handleCompanionChange(event) {
 }
 
 function renderCompanion(state) {
-  const mascotState = getMascotState({ isAnalyzing: state === "thinking", score: lastScore });
-  companion.classList.toggle("is-quiet", quietMode);
-  companion.innerHTML = `
-    <div class="inklet ${mascotState}" aria-hidden="true">
-      <span class="inkletQuill"></span>
-      <span class="inkletFace"></span>
-      <span class="inkletBlush"></span>
-    </div>
-    <div class="cadenceCopy">
-      <div class="cadenceKicker">Inklet</div>
-      <p>${escapeHtml(quietMode ? "Quiet mode is on. Analysis stays active." : getCadenceMessage(state))}</p>
-      <label class="quietToggle">
-        <input id="quietModeToggle" type="checkbox" ${quietMode ? "checked" : ""}>
-        <span>Quiet mode</span>
-      </label>
-    </div>
-  `;
+  const msg = escapeHtml(quietMode ? "Quiet mode is on. Analysis stays active." : getCadenceMessage(state));
+  renderPenwick(state, companion, quietMode, `${msg}
+    <label class="quietToggle">
+      <input id="quietModeToggle" type="checkbox" ${quietMode ? "checked" : ""}>
+      <span>Quiet mode</span>
+    </label>`);
 }
 
 function levelLabel(level, issueCount = 1) {
