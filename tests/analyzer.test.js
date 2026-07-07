@@ -67,6 +67,32 @@ test("flags low-specificity abstract claims", () => {
   assert.equal(result.specificityBoosters.length, 1);
 });
 
+test("does not treat casual like as a concrete example marker", () => {
+  const result = analyzeBlocks([
+    {
+      id: "block-0",
+      kind: "paragraph",
+      index: 0,
+      text: "This solution feels like a strategy for optimization, innovation, transformation, and performance."
+    }
+  ]);
+
+  assert.equal(result.issues.some((issue) => issue.category === "specificity"), true);
+});
+
+test("flags broader marketing buzzwords as predictable phrasing", () => {
+  const result = analyzeBlocks([
+    {
+      id: "block-0",
+      kind: "paragraph",
+      index: 0,
+      text: "Our thought leader platform helps teams streamline workflows, empower stakeholders, and improve the value proposition."
+    }
+  ]);
+
+  assert.equal(result.issues.some((issue) => issue.category === "predictability"), true);
+});
+
 test("flags symmetrical bullet structure", () => {
   const result = analyzeBlocks([
     { id: "block-0", kind: "bullet", index: 0, text: "Improve draft clarity now" },

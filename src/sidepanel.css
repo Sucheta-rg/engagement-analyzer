@@ -110,7 +110,7 @@ button {
   padding: 8px 12px;
   background: var(--coral);
   color: #ffffff;
-  font-weight: 750;
+  font-weight: 700;
   cursor: pointer;
   transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
@@ -418,7 +418,7 @@ button:disabled {
 .pulseCopy small {
   color: var(--muted);
   font-size: 11px;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.35;
 }
 
@@ -648,7 +648,7 @@ button:disabled {
   background: var(--sky-soft);
   color: var(--sky-dark);
   font-size: 11px;
-  font-weight: 850;
+  font-weight: 800;
   text-transform: uppercase;
 }
 
@@ -679,7 +679,7 @@ button:disabled {
 .issueMeta {
   color: var(--coral-dark);
   font-size: 11px;
-  font-weight: 850;
+  font-weight: 800;
   text-transform: uppercase;
 }
 
@@ -788,7 +788,7 @@ blockquote {
 .nextMove span {
   color: #7e5a18;
   font-size: 11px;
-  font-weight: 850;
+  font-weight: 800;
   text-transform: uppercase;
 }
 
@@ -809,7 +809,7 @@ blockquote {
 .rewriteBox span {
   color: var(--sky-dark);
   font-size: 11px;
-  font-weight: 850;
+  font-weight: 800;
   text-transform: uppercase;
 }
 
@@ -858,4 +858,62 @@ blockquote {
 
 .is-hidden {
   display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --paper: #211d1c;
+    --paper-deep: #171514;
+    --panel: #2a2523;
+    --ink: #f7eee6;
+    --soft-ink: #e1d3c8;
+    --muted: #b7a79d;
+    --line: #473c36;
+    --coral: #e08779;
+    --coral-dark: #f2aaa0;
+    --coral-soft: #3a2825;
+    --parrot: #8cc99b;
+    --parrot-dark: #b7e2c1;
+    --parrot-soft: #253528;
+    --sky: #8bbbd2;
+    --sky-dark: #b9dff0;
+    --sky-soft: #20313a;
+    --amber: #e0b760;
+    --amber-soft: #3a3020;
+    --clay: #db7468;
+    --clay-soft: #3c2724;
+    --shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+    --shadow-soft: 0 6px 16px rgba(0, 0, 0, 0.18);
+  }
+
+  .header,
+  .companion,
+  .studioPulse,
+  .scoreTile,
+  .heatmapBar,
+  .queueCard,
+  .issue,
+  .booster,
+  .empty,
+  .clearFilterButton,
+  .ghostButton {
+    background: var(--panel);
+  }
+
+  .scoreTile:hover,
+  .scoreTile.is-selected {
+    background: #302a27;
+  }
+
+  blockquote,
+  .rewriteBox {
+    background: rgba(32, 49, 58, 0.58);
+  }
+
+  .nextMove,
+  .suggestion {
+    background: var(--amber-soft);
+    color: var(--ink);
+  }
 }

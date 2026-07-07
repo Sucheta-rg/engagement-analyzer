@@ -11,7 +11,22 @@ const GENERIC_PHRASES = [
   "seamlessly",
   "robust solution",
   "cutting-edge",
-  "transform your business"
+  "transform your business",
+  "synergy",
+  "empower",
+  "thought leader",
+  "streamline",
+  "value proposition",
+  "best-in-class",
+  "next-generation",
+  "future-proof",
+  "drive growth",
+  "elevate your",
+  "at scale",
+  "holistic approach",
+  "actionable insights",
+  "mission-critical",
+  "industry-leading"
 ];
 
 const ABSTRACT_TERMS = [
@@ -186,7 +201,7 @@ function detectLowSpecificity(block) {
   const lower = block.text.toLowerCase();
   const abstractHits = ABSTRACT_TERMS.filter((term) => lower.includes(term)).length;
   const hasNumber = /\d/.test(block.text);
-  const hasExampleMarker = /\b(for example|such as|including|like)\b/i.test(block.text);
+  const hasExampleMarker = /\b(for example|such as|including)\b/i.test(block.text);
 
   if (abstractHits < 4 || hasNumber || hasExampleMarker) {
     return null;

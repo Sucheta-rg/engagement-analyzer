@@ -130,14 +130,13 @@ function renderResult(result) {
       <span>Click any line to jump</span>
     </div>
     <div class="heatmapBars">
-      ${result.heatmap.slice(0, 12).map(renderHeatmapEntry).join("")}
+      ${getPriorityHeatmap(result.heatmap).map(renderHeatmapEntry).join("")}
     </div>
   `;
 
   priority.innerHTML = `
     <div class="reviewHeader">
       <span class="eyebrow">Priority queue</span>
-      <h2>${result.fixPriority.length ? `Step 1 of ${result.fixPriority.length}: Fix this first` : "No priority edits"}</h2>
       <p>${getReviewIntro(result.fixPriority.length)}</p>
     </div>
     <div id="queueMount" class="queueMount">${renderQueueCard()}</div>
@@ -186,6 +185,12 @@ function renderHeatmapEntry(entry) {
   `;
 }
 
+function getPriorityHeatmap(entries) {
+  return [...entries]
+    .sort((a, b) => a.score - b.score || a.blockIndex - b.blockIndex)
+    .slice(0, 12);
+}
+
 function renderQueueCard() {
   if (!reviewQueue.length) {
     return renderCleanIssue();
@@ -227,6 +232,7 @@ function renderQueueCard() {
         <span class="queueProgress">Step ${activeIndex + 1} of ${reviewQueue.length}</span>
         <span class="queueCounter">${completedCount} cleared</span>
       </div>
+      <h2>Step ${activeIndex + 1} of ${reviewQueue.length}: Fix this first</h2>
       <h3>${escapeHtml(getIssueAction(issue))}</h3>
       <blockquote>${escapeHtml(issue.sentence ?? issue.excerpt ?? issue.message)}</blockquote>
       <p class="issueReason">${escapeHtml(getIssueReason(issue))}</p>
@@ -378,7 +384,7 @@ async function handlePanelClick(event) {
       renderCompanion(getCadenceState({ isAnalyzing: false, score: lastScore }));
     }, 1800);
   } catch {
-    renderMessage("Reload the Google Doc tab once, then run Analyze again so document focusing can connect.");
+    showLocateFeedback("Could not connect to the Google Doc. Reload the doc tab, then try Locate again.");
   }
 }
 
